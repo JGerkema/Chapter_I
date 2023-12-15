@@ -94,91 +94,19 @@ cwv_names <- paste0(traitlist, "_cwv")
 
 trait_information <- lst(traitlist, cwm_names, cwv_names)
 
+standen_output <- lst(input_veg = standen_veg, 
+                     input_veg_fd = standen_veg_fd,
+                     input_trait = standen_trait,
+                     input_trait_fd = standen_trait_fd,
+                     cutoff_value = 0.8,
+                     trait_detail = "Plot",
+                     trait_information = trait_information,
+                     study_name = "Standen")
+
+save(standen_output,
+ file = "data/processed/standen_prep.RData")
+
 ``` 
 
 
-## 5. Perform calculations
-```{r calculations }
 
-standen_processed_specieslvl <- cats_preparation(input_veg = standen_veg, 
-                                              input_trait = standen_trait, cutoff_value =  0.8, 
-                                              trait_information = trait_information,
-                                             trait_detail = "Plot")
-
-mean_dist <- calculate_mean_dist(standen_veg, standen_processed_specieslvl)
-
-FD_df <- calculate_FD_plotlvl(standen_processed_specieslvl, standen_veg_fd, standen_trait_fd)
-
-diversity_info <- standen_processed_specieslvl[["relative_abundances"]][["matrix4traits_prop"]] %>% 
-  as.data.frame() %>% 
-  mutate(shannon = diversity(.[,1:ncol(.)], index = "shannon", MARGIN = 1, base = exp(1)),
-         simpson = diversity(.[,1:ncol(.)], index = "simpson", MARGIN = 1, base =exp(1)),
-         species_richness = specnumber(.[,1:ncol(.)], MARGIN = 1),
-         empty_states = ncol(standen_processed_specieslvl[["relative_abundances"]][["matrix4traits_prop"]]) - species_richness,
-         meta_size = ncol(standen_processed_specieslvl[["relative_abundances"]][["matrix4traits_prop"]])) %>%
-  select(shannon, simpson, species_richness, empty_states, meta_size) %>% # base = exp(1) gives the shannon index a log e base
-  rownames_to_column(var = "Plot_code") %>%
-  full_join(mean_dist) %>%
-  full_join(FD_df)
-
-
-
-```
-
-
-
-## 6. Cats model
-```{r cats calculations}
-
-#Determines amount of cores, substract four to keep to pc free for other processes.
-n_cores <- parallel::detectCores() - 5 
-
-my_cluster <- makeSOCKcluster(n_cores)
-
-registerDoSNOW(cl = my_cluster)
-
-foreach::getDoParRegistered() # check if cluster is set up
-
-
-standen_cats <- cats_calculations(standen_processed_specieslvl, trait_information,
-                                  trait_detail = "Plot") %>%
-  mutate(study = "Standen")
-
-standen_figure <- cats_visualisation(standen_cats) %>%
-  mutate(study = "Standen")
-
-save(standen_processed_specieslvl, standen_figure, standen_species_list, standen_cats,
- file = "data/processed/standen_calculations.RData")
-
-ggplot(standen_figure, aes(x = species_richness, y = KLR2)) +
-  geom_point() +
-  facet_wrap(~Deviance) + 
-  theme_classic() +
-  geom_smooth(method = "lm") + 
-  labs(title = "The relationship between species richness and the CATS decomposition - Standen et al. 2021",
-       x = "Species richness") +
-  geom_hline(yintercept = 0, linetype = 2) +
-   coord_cartesian(ylim = c(-0.2, 1)) +
-  scale_y_continuous(breaks = c(-0.2, 0,0.2, 0.4, 
-    0.6,  0.8,  1
-  )) 
-
-ggplot(standen_figure, aes(x = mean_dist, y = KLR2)) +
-  geom_point() +
-  facet_wrap(~Deviance) + 
-  theme_classic() +
-  geom_smooth(method = "lm") + 
-  labs(title = "The relationship between plot dissimilarity and the CATS decomposition - Standen et al. 2021",
-       x = "Average Bray-Curtis index value") +
-  geom_hline(yintercept = 0, linetype = 2) +
-   coord_cartesian(ylim = c(-0.2, 1)) +
-  scale_y_continuous(breaks = c(-0.2, 0,0.2, 0.4, 
-    0.6,  0.8,  1
-  )) 
-
-
-
-
-
-
-```

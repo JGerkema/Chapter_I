@@ -237,8 +237,7 @@ not_included_in_wf <- try_clean2 %>%
                       "tallmorph", "terete-leaved", "terra", "tree", "tree co2", 
                       "tree field", "trees", "wedding day'"
                       )) %>%
-  filter(genus %notin% c("Mountain", "may", "Lauraceae", "Southafrica", "Tropical",
-                         "")) %>%
+  filter(genus %notin% c("Mountain", "may", "Lauraceae", "Southafrica", "Tropical")) %>%
   filter(AccSpeciesName %notin% c("Paeonia 'anne rosse'", "Mid liana", 
                                   "Mata mata", "Mata mata preto", 
                                   "Mata mata si", "Buxuxu new", "Buxuxu old",
@@ -263,12 +262,35 @@ matched_clean <- matched_with_wf %>%
 # This dataset contains new species names for the try names that did not have an
 # initial match. The new names contain a mix of accepted, unchecked and synonym names.
 matched_clean2 <- matched_clean %>%
-  select(c(taxonID, scientificName, spec.name, genus, family)) %>%
-  rename(new_name = scientificName, AccSpeciesName = spec.name,
-         acceptedNameUsageID = taxonID) #%>%
+  select(c(taxonID, scientificName, spec.name.ORIG, genus, family)) %>%
+  rename(new_name = scientificName, AccSpeciesName = spec.name.ORIG,
+         acceptedNameUsageID = taxonID) 
+
+
+matched_clean2_new <- matched_clean %>%
+  select(c(taxonID, scientificName, spec.name.ORIG, genus, family)) %>%
+  rename(AccSpeciesName = spec.name.ORIG) %>%
+  left_join(classification)
+  #%>%
    #mutate(acceptedNameUsageID = recode(acceptedNameUsageID, "wfo-0000667939" = "wfo-0001067485"))
 
+try_direct_match <- try_clean2 %>%
+  filter(AccSpeciesName %notin% c(try_wf_clean2$AccSpeciesName)) # E
 
+try_fuzzy_matched <- try_clean2 %>%
+  filter(AccSpeciesName %in% c(matched_clean2$AccSpeciesName))
+
+length(unique(try_clean_new_matched$AccSpeciesName))
+
+
+
+check <- not_included_in_wf %>%
+  filter(AccSpeciesName %in% c(matched_clean2$AccSpeciesName))
+
+check <- matched_clean2 %>%
+  filter(AccSpeciesName %notin% c(try_clean_new_matched$AccSpeciesName))
+
+check$AccSpeciesName
 
 # Try_wf_clean2 contains the species in the TRY database that have a direct match
 # within the WFO database. From that dataset, all names are removed that are 
@@ -283,32 +305,29 @@ accepted_species <- try_wf_clean2 %>%
   # last lines of codes, the duplicates are removed. 
   distinct(AccSpeciesName, .keep_all = TRUE)
 
-check <- accepted_species %>%
+# These multiple accepted species names belonging to one TRY entry, poses a problem
+# for the matching of species synonyms. As it is unclear of the synonym actually belongs to 
+# the data in the TRY database. To check later in the script, if any of the matched
+# accepted species names, could lead to misinterpretations, the AccSpeciesNames belonging
+# to multiple WFO names, are saved. 
+
+accepted_species_multiple <- try_wf_clean2 %>%
+  filter(taxonomicStatus != "Synonym") %>%
+  select(scientificName, taxonID, genus, family, taxonomicStatus) %>%
+  rename(acceptedNameUsageID = taxonID, AccSpeciesName = scientificName) %>%
+  mutate(new_name = AccSpeciesName) %>%
   group_by(AccSpeciesName) %>%
   filter(n() >1) %>%
   ungroup() %>%
- # select(-c(acceptedNameUsageID)) %>%
   filter(taxonomicStatus != "Unchecked") %>%
   distinct() %>%
   group_by(AccSpeciesName) %>%
   filter(n() >1)
-length(unique(check$AccSpeciesName))
-
-check <- try_filtered %>%
-  filter(AccSpeciesName %in% c(multiple_synonyms$scientificName)) %>%
-  select(AccSpeciesName, SpeciesName) %>%
-  distinct()
-
-
-
-check2 <- try_filtered %>%
-  filter(AccSpeciesName %in% c("Jupunba trapezifolia")) %>%
-  select(AccSpeciesName, SpeciesName) %>%
-  distinct()
 # The synonyms datafile contains all synonym names. Some of those names are the 
 # same as an accepted species, indistinguishable if not for the author citation.
 # These synonyms are removed as it is assumed that the name in the TRY database 
 # corresponds with the accepted species name and not with the synonym. 
+
 
 synonyms <- try_wf_clean2 %>% 
   filter(taxonomicStatus == "Synonym") %>% # n = 7484
@@ -391,10 +410,11 @@ codes <- classification %>%
 
 matched_synonyms <- full_join(all_synonyms, codes) %>%
   filter(include == "yes") %>%
-  rename(AccSpeciesName = scientificName) 
+  rename(AccSpeciesName = scientificName) %>%
+  filter(new_name %notin% c(accepted_species_multiple$new_name))
 
-check <- try_filtered %>%
-  filter(AccSpeciesName %in% c(matched_synonyms$new_name)) %>%
+check <- matched_synonyms %>%
+  filter(new_name %in% c(accepted_species_multiple$new_name)) %>%
   select(AccSpeciesName, SpeciesName) %>%
   distinct()
 
@@ -456,7 +476,18 @@ matched_clean3 <- matched_clean2 %>%
          AccSpeciesName = AccSpeciesName.x,
          genus = genus.x,
          family = family.x)
+# TO DO FOR 14-12. check what happens here exactly. And fix it.
 
+matched_clean3 <- matched_clean2 %>%
+  filter()
+  merge(accepted_species, by = c("new_name" ="new_name")) %>%
+  filter(!acceptedNameUsageID.x != acceptedNameUsageID.y) %>%
+  select(new_name, acceptedNameUsageID.x, AccSpeciesName.x, genus.x, family.x) %>%
+  # genus.x and genus.y are exactly the same, the same goes for the family columns
+  rename(acceptedNameUsageID = acceptedNameUsageID.x,
+         AccSpeciesName = AccSpeciesName.x,
+         genus = genus.x,
+         family = family.x)
 
 matched_clean_final <- matched_clean2 %>%
   filter(new_name %notin% c(accepted_species$new_name)) %>%
