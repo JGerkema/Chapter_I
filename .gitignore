@@ -4,6 +4,6 @@
 .Ruserdata
 
 # exclude data 
-/data
+data
 .Rprofile
 /docs
