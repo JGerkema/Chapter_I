@@ -726,28 +726,17 @@ try_genus_lvl <- try_traits_tax_final %>%
   ungroup() %>%
   pivot_wider(names_from = TraitName, values_from = StdValue)
 
-save(try_traits_tax_final, try_genus_lvl, try_species_lvl, try_tax_hierarchy, 
-     file = "data/processed/try_final_clean161.RData")
-
-
-#########@@@@@@@@@@@################## Einde poging 2 
-
-```
-
-```{r BHPMF}
-
-trait_species_lvl <- try_species_lvl %>%
-  column_to_rownames(var = "new_name") %>%
+### Preparations for imputation
+try_species_lvl_norm <- try_species_lvl %>%
+  column_to_rownames(var = "wfo_match") %>%
   as.matrix()
-
-
 
 #The data must be normalized and linearized. A log transformation is used. But it could be that that is not the appropriate transformation. 
 back_trans_specieslvl <- list()
 rm_col <- c()
 
-for(i in 1:ncol(trait_species_lvl)){
-x <- trait_species_lvl[,i] # goes through the columns
+for(i in 1:ncol(try_species_lvl_norm)){
+x <- try_species_lvl_norm[,i] # goes through the columns
 min_x <- min(x,na.rm = T) # takes the min of each column
 if(min_x < 0.00000000001){
 x <- x - min_x + 1 # make this optional if min x is neg
@@ -759,13 +748,21 @@ x <- (logx - mlogx)/slogx # Z transformation
 back_trans_specieslvl[[i]] <- list(min_x = min_x,
 mlogx = mlogx,
 slogx = slogx)
-trait_species_lvl[,i] <- x
+try_species_lvl_norm[,i] <- x
 }
 
-write.csv(trait_species_lvl, "data/processed/try_traits_specieslvl.csv")
-write.csv(try_tax_hierachy, "data/processed/try_tax_hierachy.csv")
 
-save(trait_species_lvl, try_tax_hierachy, file = "data/processed/try_tax_hierachy.RData" )
+save(try_traits_tax_final, try_genus_lvl, try_species_lvl, try_tax_hierarchy, 
+     try_species_lvl_norm, back_trans_specieslvl,
+     file = "data/processed/try_final_clean161.RData")
+
+
+#########@@@@@@@@@@@################## Einde poging 2 
+
+```
+
+```{r BHPMF}
+
 
 
 
