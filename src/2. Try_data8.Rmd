@@ -639,6 +639,9 @@ final_combined <- combined2 %>%
                          genus == "Pterothamnus" ~ "Caprifoliaceae",
                          genus == "Szowitsia" ~ "Apiaceae",
                          genus == "Thylacium" ~ "Capparaceae",
+                         genus == "Ardisia" ~ "Primulaceae", # for these last three, the genus was coupled to two families. 
+                         genus == "Athyrium" ~ "Aspleniaceae",
+                         genus == "Baeckea" ~ "Myrtaceae", 
                          TRUE ~ family)) %>%
   bind_rows(multiple_synonyms_keep)
   # genus == "Trigastrotheca" ~ "Molluginaceae"
@@ -695,13 +698,7 @@ try_names_save_3 <- try_names_save_3 %>%
 try_tax2 <- try_tax %>% full_join(try_names_save_complete) %>% distinct() %>%
   rename(initial_wfo_match = new_try_name)
 
-test <- try_tax2 %>%
-  select(acceptedNameUsageID, wfo_match) %>%
-  distinct() %>%
-  group_by(acceptedNameUsageID) %>%
-  filter(n()>1)
 
-length(unique(try_tax2$initial_wfo_match))
 
 try_traits_tax_final <- try_clean2 %>%
   rename(old_try_name = AccSpeciesName) %>%
@@ -728,8 +725,6 @@ try_genus_lvl <- try_traits_tax_final %>%
   summarize(across(where(is.numeric), ~mean(., na.rm = T))) %>%
   ungroup() %>%
   pivot_wider(names_from = TraitName, values_from = StdValue)
-
-length(unique(try_genus_lvl$genus))
 
 save(try_traits_tax_final, try_genus_lvl, try_species_lvl, try_tax_hierarchy, 
      file = "data/processed/try_final_clean161.RData")
