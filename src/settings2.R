@@ -5,10 +5,8 @@ list_of_packages <- c("tidyverse", "FD", "janitor", "progress", "readxl",
                       "RColorBrewer", "gcookbook", "janitor", "ggpmisc",
                       "vegan", "foreach", "doSNOW", "docstring", "renv", "ggcorrplot",
                       "reshape2", "conflicted", 
-                      "remotes", "roxygen2", "abind", "prettyunits", "extrafont", "shiny",
-                      "quantreg", "snow", "maps", "mapdata", "sp", "askpass", "gtools", 
-                      "maptools", "minpack.lm" , "devtools", "geosphere",
-                      "scales", "ecodist")
+                      "remotes", "roxygen2", "devtools", "geosphere",
+                      "scales", "ecodist", "WorldFlora", "rtry")
 
 # Display numbers without scientific notation
 options(scipen = 15)   

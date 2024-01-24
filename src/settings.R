@@ -4,10 +4,8 @@ list_of_packages <- c("tidyverse", "FD", "janitor", "progress", "readxl",
                       "RColorBrewer", "gcookbook", "janitor", "ggpmisc",
                       "vegan", "foreach", "doSNOW", "docstring", "renv", "ggcorrplot",
                       "reshape2", "conflicted", 
-                      "remotes", "roxygen2", "abind", "prettyunits", "extrafont", "shiny",
-                      "quantreg", "snow", "sp", "askpass", "gtools", 
-                      "maptools", "minpack.lm" , "devtools", "geosphere",
-                      "scales", "ecodist")
+                      "remotes", "roxygen2", "devtools", "geosphere",
+                      "scales", "ecodist", "WorldFlora", "rtry")
 
 new_packages <- list_of_packages[!(list_of_packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) install.packages(new_packages)
@@ -54,15 +52,9 @@ library(taxonlookup)
 library(geosphere) # Calculate distances between plots
 library(scales) # Gradient colours in ggplot
 library(ecodist) # Bray Curtis index
+library(WorldFlora)
+library(rtry)
 
-#remotes::install_github("traitecoevo/taxonlookup")
-
-# Install and load austraits packages
-#if("austraits" %notin% installed.packages()[,"Package"]) remotes::install_github("traitecoevo/austraits", dependencies = TRUE, upgrade = "never")
-#if("ausplotsR" %notin% installed.packages()[,"Package"]) remotes::install_github("ternaustralia/ausplotsR", build_vignettes = TRUE, dependencies = TRUE, upgrade = "never")
-
-#library(austraits)
-#library(ausplotsR)
 
 # Indicating preferences
 conflict_prefer("rename", "dplyr")
@@ -73,7 +65,7 @@ conflict_prefer("summarise", "dplyr")
 conflict_prefer("load", "base")
 conflict_prefer("filter", "dplyr")
 conflict_prefer("where", "dplyr")
-conflict_prefer("check", "remotes")
+#conflict_prefer("check", "remotes")
 
 
 
