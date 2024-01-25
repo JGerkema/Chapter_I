@@ -37,12 +37,29 @@ classification <- read_delim("data/raw/classification202312.csv",
 
 # synonyms <- classification %>%   filter(taxonomicStatus == "Synonym") 
 
-#length(unique(TRYdata1$AccSpeciesName)) # n = 94230
+length(unique(TRYdata1$AccSpeciesName)) # n = 94230
 
 path_to_data <- "data/raw/TRY/29649.txt"
 
 TRYdata1 <- rtry_import(path_to_data)
 
+length(unique(TRYdata1$AccSpeciesName)) # n = 94230
+length(unique(TRYdata1$AccSpeciesID)) # n = 
+
+check <- try_filtered %>% 
+  select(AccSpeciesName, AccSpeciesID) %>%
+  distinct() %>%
+  mutate(AccSpeciesName = tolower(AccSpeciesName)) %>%
+  mutate(AccSpeciesName = paste0(tools::toTitleCase(word(AccSpeciesName, 1)), " ",
+                                  word(AccSpeciesName, 2, -1))) %>%
+  filter(AccSpeciesName %in% c(removed_because_nonsensical_final$AccSpeciesName)) 
+
+check2 <- removed_because_nonsensical_final %>%
+  filter(AccSpeciesName %notin% check$AccSpeciesName)
+length(unique(removed_because_nonsensical_final$AccSpeciesName))
+
+check3 <- TRYdata1 %>%
+   filter(AccSpeciesID %in% check$AccSpeciesID)
 #tmp_unfiltered <- rtry_select_row(TRYdata1, DataID %in% 413)
 
 #tmp_unfiltered <- rtry_explore(tmp_unfiltered, DataID, DataName, OriglName, OrigValueStr, OrigUnitStr, StdValue, Comment, sortBy = OrigValueStr)
@@ -198,7 +215,7 @@ load("~/0. PhD/0. Chapter_I/data/processed/try_clean23_1.RData")
 
 
 length(unique(try_clean2$AccSpeciesName))
-4575-
+
 # try_clean2 contains 69203 unique, "accepted" species names
 
 # try_wf_clean2 contains the species names in the TRY database that have a direct
@@ -665,9 +682,10 @@ final_combined <- combined2 %>%
                          genus == "Pterothamnus" ~ "Caprifoliaceae",
                          genus == "Szowitsia" ~ "Apiaceae",
                          genus == "Thylacium" ~ "Capparaceae",
-                         genus == "Ardisia" ~ "Primulaceae", # for these last three, the genus was coupled to two families. 
+                         genus == "Ardisia" ~ "Primulaceae", # for these next four, the genus was coupled to two families. 
                          genus == "Athyrium" ~ "Aspleniaceae",
-                         genus == "Baeckea" ~ "Myrtaceae", # till here
+                         genus == "Baeckea" ~ "Myrtaceae", 
+                         genus == "Libertia" ~ "Iridaceae", # till here
                          genus == "Trigastrotheca" ~ "Molluginaceae",
                          genus == "Opoponax" ~ "Apiaceae",
                          TRUE ~ family)) %>%
@@ -719,8 +737,6 @@ try_tax <- vascular.families %>% # obtained from https://rdrr.io/cran/WorldFlora
 colSums(is.na(try_tax))
 sort(unique(try_tax$order))
 
-check <- try_tax %>%
-  filter(is.na(order))
 
 try_names_save_complete <- bind_rows(try_names_save_1, try_names_save_2,
                                      try_names_save_3) #%>%
@@ -796,7 +812,7 @@ save(try_traits_tax_final, try_genus_lvl, try_species_lvl, try_tax_hierarchy,
      try_species_lvl_norm, back_trans_specieslvl,
      file = "data/processed/try_final_clean161.RData")
 
-save(try_traits_tax_final, file = "data.public/try_final241.RData")
+save(try_traits_tax_final, file = "data.public/try_final251.RData")
 
 
 #########@@@@@@@@@@@################## Einde poging 2 
