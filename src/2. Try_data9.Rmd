@@ -43,23 +43,7 @@ path_to_data <- "data/raw/TRY/29649.txt"
 
 TRYdata1 <- rtry_import(path_to_data)
 
-length(unique(TRYdata1$AccSpeciesName)) # n = 94230
-length(unique(TRYdata1$AccSpeciesID)) # n = 
 
-check <- try_filtered %>% 
-  select(AccSpeciesName, AccSpeciesID) %>%
-  distinct() %>%
-  mutate(AccSpeciesName = tolower(AccSpeciesName)) %>%
-  mutate(AccSpeciesName = paste0(tools::toTitleCase(word(AccSpeciesName, 1)), " ",
-                                  word(AccSpeciesName, 2, -1))) %>%
-  filter(AccSpeciesName %in% c(removed_because_nonsensical_final$AccSpeciesName)) 
-
-check2 <- removed_because_nonsensical_final %>%
-  filter(AccSpeciesName %notin% check$AccSpeciesName)
-length(unique(removed_because_nonsensical_final$AccSpeciesName))
-
-check3 <- TRYdata1 %>%
-   filter(AccSpeciesID %in% check$AccSpeciesID)
 #tmp_unfiltered <- rtry_select_row(TRYdata1, DataID %in% 413)
 
 #tmp_unfiltered <- rtry_explore(tmp_unfiltered, DataID, DataName, OriglName, OrigValueStr, OrigUnitStr, StdValue, Comment, sortBy = OrigValueStr)
@@ -161,14 +145,16 @@ try_filtered <- rtry_remove_dup(try_ls_exp_hlth)
 
 try_filtered <- rtry_exclude(try_filtered, ErrorRisk >= 3, baseOn = ObsDataID) 
 
-length(unique(try_filtered$AccSpeciesName))
+
+
+trait_explore <- rtry_explore(try_filtered, DataID, DataName, TraitID, TraitName, sortBy = TraitID)
 
 try_clean <- try_filtered %>%
-  mutate(OrigValueStr =  case_when(OrigValueStr == "c3" ~ "C3",
-                             OrigValueStr == "C3?" ~ "C3",
-                             OrigValueStr == "c4" ~ "C4",
-                             OrigValueStr == "C4?" ~ "C4",
-                             TRUE ~ OrigValueStr)) %>%
+  #mutate(OrigValueStr =  case_when(OrigValueStr == "c3" ~ "C3",
+   #                          OrigValueStr == "C3?" ~ "C3",
+    #                         OrigValueStr == "c4" ~ "C4",
+     #                        OrigValueStr == "C4?" ~ "C4",
+      #                       TRUE ~ OrigValueStr)) %>%
   filter(DataID %notin% c(8178, 9780, 1629, 1739, 974, 2526, 2760, 2527, 2761, 
                           9906, 2762, 9578, 9577, 9576, 9575, 9574, 3710, 2958, 
                           9447, 8651, 8643, 8648, 8642, 8650, 8647, 8646, 8649, 
@@ -178,9 +164,9 @@ try_clean <- try_filtered %>%
                           9899, 9900, 9901, 476, 2506, 829, 2499, 2500, 1027, 
                           1028, 2311, 4142, 3974, 3979, 3980, 3978, 3976, 3975, 
                           3977)) %>%
-  filter(TraitID %in% c(3, 4, 13, 14, 15, 18, 22, 24, 26, 27, 46, 47, 48, 53, 54, 
+  filter(TraitID %in% c(3, 4, 13, 14, 15, 22, 24, 26, 27, 46, 47, 48, 53, 54, 
                         59, 70, 71, 83, 89, 145, 146, 164, 246, 334, 785, 819, 839, 
-                        1047, 1080, 1181, 1256, 3106, 3113, 3117, 3588, 3801)) %>%
+                        1047, 1080, 1181, 1256, 3106, 3113, 3117, 3588, 3801)) %>% #n = 36
   drop_na(StdValue) %>%
   select(AccSpeciesName, TraitID, ObservationID, TraitName, StdValue,
          Reference, LastName, FirstName) %>%
@@ -189,7 +175,8 @@ try_clean <- try_filtered %>%
   summarise(across(where(is.numeric), ~mean(., na.rm = TRUE))) %>%
   ungroup()
 
-length(unique(try_clean$AccSpeciesName)) # n = 69324
+
+length(unique(try_clean$AccSpeciesName)) # n = 69312
 
 
 renv::init()
@@ -216,10 +203,10 @@ load("~/0. PhD/0. Chapter_I/data/processed/try_clean23_1.RData")
 
 length(unique(try_clean2$AccSpeciesName))
 
-# try_clean2 contains 69203 unique, "accepted" species names
+# try_clean2 contains 69191 unique, "accepted" species names
 
 # try_wf_clean2 contains the species names in the TRY database that have a direct
-# match with the WFO backbone. n = 64628.
+# match with the WFO backbone. n = 64617.
 try_wf_clean_first <- classification %>%
   mutate(scientificName = str_replace_all(scientificName, "  ", " ")) %>%
   filter(scientificName %in% c(try_clean2$AccSpeciesName))
@@ -271,14 +258,14 @@ removed_because_nonsensical_final <- not_included_in_wf %>%
                                   )) %>% # mata mata is a turtle species
   select(AccSpeciesName) %>%
   bind_rows(removed_because_nonsensical) %>%
-  arrange(AccSpeciesName)
+  arrange(AccSpeciesName) #1592
 
 not_included_in_wf <- not_included_in_wf %>%
   filter(AccSpeciesName %notin% c(removed_because_nonsensical_final$AccSpeciesName))
 
-length(unique(not_included_in_wf$AccSpeciesName)) #3104
+length(unique(not_included_in_wf$AccSpeciesName)) #3103
 
-write_xlsx(removed_because_nonsensical_final, path = "removed_because_nonsensical_final.xlsx")
+write_xlsx(removed_because_nonsensical_final, path = "removed_because_nonsensical_final291.xlsx")
 
 
 ################################################## 
@@ -292,7 +279,7 @@ second_check_match <- not_included_in_wf %>%
   mutate(scientificName = paste0(genus, " ", sp)) %>%
   select(-c("sp", "extra", "genus"))
 
-length(unique(second_check_match$scientificName))
+length(unique(second_check_match$scientificName)) #n = 866
 
 try_wf_clean_second <- classification %>%
   mutate(scientificName = str_replace_all(scientificName, "  ", " ")) %>%
@@ -305,7 +292,7 @@ try_names_save_2 <- second_check_matched %>%
   rename(old_try_name = AccSpeciesName,
          new_try_name = scientificName) 
 
-length(unique(try_wf_clean_second$scientificName)) #n = 754
+length(unique(try_wf_clean_second$scientificName)) #n = 753
 
 # The species that do not have a direct match with the WFO backbone. n = 2323
 to_be_matched <- not_included_in_wf %>%
@@ -316,7 +303,7 @@ to_be_matched <- not_included_in_wf %>%
 matched_with_wf <- WFO.match(spec.data = to_be_matched, WFO.data = classification)
 
 save(try_filtered, try_clean2, removed_because_nonsensical, matched_with_wf,
- file = "data/processed/try_clean23_1.RData")
+ file = "data/processed/try_clean29_1.RData")
 
 ############ Maybe remove later
 to_be_matched1 <- to_be_matched[1:500]
@@ -430,7 +417,7 @@ try_names_save_3 <- matched_with_wf_save_filt %>%
 try_wf_clean_complete <- bind_rows(try_wf_clean_first, try_wf_clean_second,
                                    try_wf_clean_third) %>% distinct()
 
-length(unique(try_wf_clean_complete$scientificName)) #65481
+length(unique(try_wf_clean_complete$scientificName)) #65470
 
 # Try_wf_clean2 contains the species in the TRY database that have a direct match
 # within the WFO database. From that dataset, all names are removed that are 
@@ -445,7 +432,7 @@ accepted_species_single_first <- try_wf_clean_complete %>% ## was eerst try_wf_c
   # are selected that that have no such duplicates
   filter(n() == 1) 
 
-length(unique(accepted_species_single_first$wfo_match)) #58299
+length(unique(accepted_species_single_first$wfo_match)) #58289
 
 # These multiple accepted species names belonging to one TRY entry, poses a problem
 # for the matching of species synonyms. As it is unclear of the synonym actually belongs to 
@@ -472,7 +459,7 @@ accepted_species_single <- try_wf_clean_complete %>% #was eerst try_wf_clean2
   filter(n()==1) %>%
   bind_rows(accepted_species_single_first)
 
-length(unique(accepted_species_single$wfo_match)) #59887
+length(unique(accepted_species_single$wfo_match)) #59877
 
 accepted_species_multiple <- try_wf_clean_complete %>% # was eerst try_wf_clean2
   filter(taxonomicStatus != "Synonym") %>%
@@ -490,7 +477,7 @@ length(unique(accepted_species_multiple$wfo_match)) # n = 899
 
 accepted_species <- bind_rows(accepted_species_multiple, accepted_species_single) 
 
-length(unique(accepted_species$new_try_name)) #60786
+length(unique(accepted_species$new_try_name)) #60776
 
 
 # The synonyms datafile contains all synonym names. Some of those names are the 
@@ -499,15 +486,15 @@ length(unique(accepted_species$new_try_name)) #60786
 # corresponds with the accepted species name and not with the synonym. 
 
 synonyms <- try_wf_clean_complete %>% # was eerst try_wf_clean2
-  filter(taxonomicStatus == "Synonym") %>% # n = 8414
-  filter(scientificName %notin% c(accepted_species$new_try_name)) %>%  # n = 4693
+  filter(taxonomicStatus == "Synonym") %>% # n = 8412
+  filter(scientificName %notin% c(accepted_species$new_try_name)) %>%  # n = 3718
   # Filter out all the synonyms that have an actual species match. I am going to
   # assume that if an author writes down that name in the TRY database, 
   # it means the original, accepted species name and not a synonym of another species. 
   select(c(scientificName, acceptedNameUsageID, nomenclaturalStatus, 
            taxonomicStatus, genus, family)) 
 
-length(unique(synonyms$scientificName)) # n = 4695
+length(unique(synonyms$scientificName)) # n = 4694
 
 
 # First, the synonyms are extracted which have a unique, accepted name. To do so, first 
@@ -522,7 +509,7 @@ single_synonyms <- synonyms %>%
   filter(n() == 1) %>%
   ungroup()
 
-length(unique(single_synonyms$scientificName)) # n = 4496
+length(unique(single_synonyms$scientificName)) # n = 4495
 
 #check <- multiple_synonyms %>%
  # rename(AccSpeciesName = scientificName) %>%
@@ -589,7 +576,7 @@ all_synonyms <- bind_rows(single_synonyms, single_synonyms_2, single_synonyms_3)
   mutate(include = "yes") %>%
   select(-c(genus, family))
 
-length(unique(all_synonyms$scientificName)) # n = 4623
+length(unique(all_synonyms$scientificName)) # n = 4622
 
 # Now it is time to match the acceptedNameUsageID's with the actual species names
 codes <- classification %>% 
@@ -604,7 +591,7 @@ matched_synonyms <- full_join(all_synonyms, codes) %>%
   filter(wfo_match %notin% c(accepted_species_multiple$wfo_match)) 
 # n = 21 are removed
 
-length(unique(matched_synonyms$new_try_name)) # 4602
+length(unique(matched_synonyms$new_try_name)) # 4601
 
 # Some of the new names found by the synonyms, are also present in the
 # accepted species list. This should not be a problem except for the fact that
@@ -619,7 +606,7 @@ length(unique(matched_synonyms$new_try_name)) # 4602
 combined <- bind_rows(matched_synonyms, accepted_species) %>%
   select(-c(include, nomenclaturalStatus))
 
-length(unique(combined$wfo_match)) # HET KLOPT!! 64018 unique new species names and codes
+length(unique(combined$acceptedNameUsageID)) # HET KLOPT!! 64008 unique new species names and codes
 
 
 # The combined dataset contains the accepted species name (the original try name),
@@ -658,7 +645,7 @@ length(unique(combined$wfo_match)) # HET KLOPT!! 64018 unique new species names 
 
 
 
-final <- bind_rows(try_direct_match2, try_fuzzy_matched)
+#final <- bind_rows(try_direct_match2, try_fuzzy_matched)
 
 final_new <- combined
 
@@ -734,21 +721,9 @@ try_tax <- vascular.families %>% # obtained from https://rdrr.io/cran/WorldFlora
                          "Sphagnales")) %>%
   select(-c(Group))
 
-colSums(is.na(try_tax))
-sort(unique(try_tax$order))
-
 
 try_names_save_complete <- bind_rows(try_names_save_1, try_names_save_2,
-                                     try_names_save_3) #%>%
-  select(-c(save))
-try_names_save_1 <- try_names_save_1 %>%
-  mutate(save = "1")
-
-try_names_save_2 <- try_names_save_2 %>%
-  mutate(save = "2")
-
-try_names_save_3 <- try_names_save_3 %>%
-  mutate(save = "3")
+                                     try_names_save_3) 
 
 try_tax2 <- try_tax %>% full_join(try_names_save_complete) %>% distinct() %>%
   rename(initial_wfo_match = new_try_name)
@@ -762,6 +737,12 @@ try_traits_tax_final <- try_clean2 %>%
   filter(Reference %notin% c("Jager et al (2015) Journal of Ecology 103(2):374-385. https://doi.org/10.1111/1365-2745.12366 ;  Simpson et al. (2016) Global Ecology and Biogeography 25:964-978 doi:10.1111/geb.12457", 
   "Raevel, V., Violle, C., & Munoz, F. (2012). Mechanisms of ecological succession: insights from plant functional strategies. Oikos, 121(11): 1761–1770. doi:10.1111/j.1600-0706.2012.20261.x Raevel, V., Munoz, F., Pons, V., Renaux, A., Martin, A., & Thompson, J.D. (2013). Changing assembly processes during a primary succession of plant communities on Mediterranean roadcuts. Journal of Plant Ecology, 6(1):19-28. https://doi.org/10.1093/jpe/rts011")) %>%
   drop_na()
+
+save(try_traits_tax_final, file = "data.public/try_final291.RData")
+length(unique(try_clean2$TraitName))
+
+
+######
 
 try_tax_hierarchy <- try_traits_tax_final %>%
   arrange(wfo_match) %>%
@@ -812,7 +793,7 @@ save(try_traits_tax_final, try_genus_lvl, try_species_lvl, try_tax_hierarchy,
      try_species_lvl_norm, back_trans_specieslvl,
      file = "data/processed/try_final_clean161.RData")
 
-save(try_traits_tax_final, file = "data.public/try_final251.RData")
+
 
 
 #########@@@@@@@@@@@################## Einde poging 2 
@@ -899,11 +880,14 @@ traits_std <- trait_org %>%
   group_by(Trait) %>%
   summarise(sd = sd(Value_org))
 
+check_na <- try_traits_tax_final %>%
+  select(c(wfo_match, ObservationID, genus, family, order, TraitName, StdValue)) %>%
+  pivot_wider(values_from = StdValue, names_from = TraitName)
 
-na_n <- (colSums(is.na(try_species_lvl_norm))) %>%
+na_n <- (colSums(is.na(check_na))) %>%
   data.frame() %>%
   rename(na_n = ".") %>%
-  mutate(perc_na = na_n/nrow(try_species_lvl_norm))
+  mutate(perc_na = na_n/nrow(check_na))
 
 trait_both2 <- inner_join(trait_perm, trait_org) %>%
   mutate(SQ_ER = (Value_perm - Value_org)^2) %>%
@@ -913,7 +897,6 @@ trait_both2 <- inner_join(trait_perm, trait_org) %>%
   ungroup() %>%
   mutate(RMSE = sqrt(MSE))
 
-sqrt(7.602797)
 
 trait_both <- inner_join(trait_perm, trait_org) %>%
   mutate(SQ_ER = (abs(Value_perm - Value_org))) %>%
@@ -921,7 +904,7 @@ trait_both <- inner_join(trait_perm, trait_org) %>%
   group_by(Trait) %>%
   summarise(MSE = mean(SQ_ER))
 
-1.206281350*1.206281350
+
 
 
 

@@ -22,7 +22,7 @@ library(hrbrthemes) # More themes for ggplot2
 library(writexl)
 library(progress) # Progress bar
 library(RColorBrewer) # More colors in ggplot2
-library(gcookbook)
+#library(gcookbook)
 library(ggpmisc) # Correlation in ggplot2
 library(vegan)
 library(foreach) # Package for a parallel loop

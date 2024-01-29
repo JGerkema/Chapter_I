@@ -16,7 +16,6 @@ complete_analysis <- function(input_veg, input_veg_fd, input_trait, input_trait_
                                       trait_information = trait_information, 
                                       cutoff_value = cutoff_value, 
                                       trait_detail = trait_detail)
-  
 
   diversity_info <- calculate_diversity_info(veg_data = input_veg, 
                                              veg_data_fd = input_veg_fd,
