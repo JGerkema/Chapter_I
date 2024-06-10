@@ -34,18 +34,19 @@ osuri_veg <- read_csv("data/raw/Osuri et al. 2016/Osuri_Sanakran_2016_JAE_plot_d
   mutate(species = recode(species, "Chrysophyllum roxburdhii" = "Chrysophyllum roxburghii",
                    "Goniothalamus cardiapetalus" = "Goniothalamus cardiopetalus",
                    "Otonephelum stipulaceum" = "Otonephelium stipulaceum",
-                   "Reinwardtiodendron anaimalaiense" = "Reinwardtiodendron anamalaiense")) %>%
+                   "Reinwardtiodendron anaimalaiense" = "Reinwardtiodendron anamalaiense",
+                   "Acronycchia pedunculata" = "Acronychia pedunculata")) %>%
   pivot_wider(values_from = `basal.area_sq.cm`, names_from = species) %>%
   replace(is.na(.), 0) %>%
   column_to_rownames(var = "Plot_code") %>%
   select(order(colnames(.)))
 
 osuri_trait <- read_excel("data/raw/Osuri et al. 2016/trait_data.xlsx") %>%
-  rename(Name = Species, SeedSize = `Seed length (cm)`, SLA = `SLA (cm2.g-1)`,
+  rename(Name = Species, Seed_length = `Seed length (cm)`, SLA = `SLA (cm2.g-1)`,
          WD = `Wood density (g.cm-3)`, 
          Height = `Maximum attainable height (m)`) %>%
   select(-c(`No. of trees sampled`, Family, `Seed dispersal mode`)) %>%
-  mutate(SeedSize = as.numeric(SeedSize),
+  mutate(Seed_length = as.numeric(Seed_length),
          WD = as.numeric(WD)) %>% 
   #replace_na(list(WD = 1)) %>%
   drop_na() %>%
@@ -53,7 +54,8 @@ osuri_trait <- read_excel("data/raw/Osuri et al. 2016/trait_data.xlsx") %>%
   mutate(Name = recode(Name, "Chrysophyllum roxburdhii" = "Chrysophyllum roxburghii",
                       "Goniothalamus cardiapetalus" = "Goniothalamus cardiopetalus",
                       "Otonephelum stipulaceum" = "Otonephelium stipulaceum",
-                      "Reinwardtiodendron anaimalaiense" = "Reinwardtiodendron anamalaiense")) %>%
+                      "Reinwardtiodendron anaimalaiense" = "Reinwardtiodendron anamalaiense",
+                      "Acronycchia pedunculata" = "Acronychia pedunculata")) %>%
   relocate(Name) %>%
   arrange(Name)
   
@@ -68,10 +70,10 @@ osuri_veg_fd <- osuri_veg %>%
 
 osuri_species_list <- colnames(osuri_veg_fd)
 
-osuri_trait <- osuri_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#osuri_trait <- osuri_trait %>%
+#  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
 
-traitlist <- sort(c("SeedSize", "SLA", "WD", "Height"))
+traitlist <- sort(c("Seed_length", "SLA", "WD", "Height"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 
@@ -84,7 +86,7 @@ osuri_output <- lst(input_veg = osuri_veg,
                      cutoff_value = 0.8,
                      trait_detail = "Study",
                      trait_information = trait_information,
-                     study_name = "Marteinsdottir")
+                     study_name = "Osuri")
 
 save(osuri_output,
  file = "data/processed/osuri_prep.RData")

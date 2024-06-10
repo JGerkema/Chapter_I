@@ -31,7 +31,13 @@ buzzard <- read_csv("data/raw/Buzzard et al. 2015/FEBuzzardSpTraits.csv") %>%
   rename(Plot_code = plot) %>%
   mutate(across(Plot_code, as.character)) %>%
   mutate(Name = recode(Name, "Allophyllusc occidentalisc" = "Allophylus occidentalis",
-                       "Tabebuea ochracea" = "Tabebuia ochracea"))
+                       "Tabebuea ochracea" = "Tabebuia ochracea",
+                       "Albizzia adinocephala" ="Albizia adinocephala",
+                        "Karwinskia caldronii" = "Karwinskia calderonii",
+                       "Dipterodendron costaricensis" = "Dipterodendron costaricense",
+                       "Erythroxylon havanense" = "Erythroxylum havanense",
+                       "Tabebuea rosea" = "Tabebuia rosea" 
+                       ))
 
 buzzard_veg <- buzzard %>%
   select(c(Plot_code, basal.area, Name)) %>%
@@ -50,16 +56,20 @@ buzzard_veg_temp <- buzzard %>%
 buzzard_species_list <- colnames(buzzard_veg)
   
 buzzard_trait <- buzzard %>%
-  select(c(Plot_code, Name, SLA, LPC, CN)) %>%
+  select(c(Plot_code, Name, SLA, LPC, CN, d13C)) %>%
+  rename(Leaf_P = LPC, Leaf_CN = CN, D13C = d13C) %>%
   full_join(buzzard_veg_temp) %>%
   group_by(Name) %>%
   mutate(across(where(is.numeric), ~replace_na(., mean(., na.rm = TRUE)))) %>%
-  select(-c(basal.area)) %>%
+  select(-c(basal.area, D13C)) %>%
   ungroup() %>%
   select(order(colnames(.))) %>%
   relocate(Plot_code, Name) %>%
   arrange(Name) %>%
-  drop_na()
+  drop_na() #%>%
+  #mutate(D13C = D13C+abs(min(D13C))) %>%
+  #mutate(D13C = D13C+0.00000000001)
+
 
 buzzard_trait_fd <- buzzard_trait
 
@@ -68,10 +78,10 @@ species_list_fd <- buzzard_trait %>% pull(Name)
 buzzard_veg_fd <- buzzard_veg %>%
   select(all_of(species_list_fd))
 
-buzzard_trait <- buzzard_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#buzzard_trait <- buzzard_trait %>%
+  #mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
  
-traitlist <- sort(c("SLA", "LPC", "CN"))
+traitlist <- sort(c("SLA", "Leaf_P", "Leaf_CN"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

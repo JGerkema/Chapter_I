@@ -1,5 +1,8 @@
 maxent.test2 <- function (model, obs, sub.c, nperm = 999, quick = TRUE, alpha = 0.05, 
     plot = TRUE, minperms = 20) {
+  
+   set.seed(19970606)
+  
     if (is.vector(obs)) {
         s.names <- names(obs)
         obs <- matrix(obs, 1, length(obs))

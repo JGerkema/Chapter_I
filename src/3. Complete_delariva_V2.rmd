@@ -44,18 +44,19 @@ riva_veg <- read_excel("data/raw/de la Riva et al. 2015/veg_data.xlsx") %>%
   arrange(Species) %>%
   mutate(Species = recode(Species, "Cistus salvifolius" = "Cistus salviifolius" )) %>%
   column_to_rownames(var = "Species") %>%
-  t()
+  t() %>%
+  as.data.frame()
 
 
 riva_trait <- read_excel("data/raw/de la Riva et al. 2015/Dryad_database.xls") %>%
   rename(Height = `Plant height (m)`,
-         Leaf_size = `Leaf size  (cm²)`,
+         LA = `Leaf size  (cm²)`,
          LDMC = `LDMC        (g g¯¹)`,
          SLA = `SLA              (m² Kg¯¹)`,
-         LChl = `LChl (µg g¯¹)`,
-         LNC = `LNC (%)`,
-         d13C = `δ 13C (‰)`,
-         SDMC = `SDMC       (g g¯¹)`,
+         Leaf_chlor = `LChl (µg g¯¹)`,
+         Leaf_N = `LNC (%)`,
+         D13C = `δ 13C (‰)`,
+         StDMC = `SDMC       (g g¯¹)`,
          WD = `WD                  (g cm¯³)`,
          RDMC = `RDMC         (g g¯¹)`,
          SRL = `SRL (m g¯¹)`,
@@ -63,7 +64,7 @@ riva_trait <- read_excel("data/raw/de la Riva et al. 2015/Dryad_database.xls") %
   mutate(Zone = recode(Zone, `Virgen Linares` = "Virgen")) %>%
   mutate(Plot_code = paste0(Zone, "_", Plot)) %>%
   select(-c(Zone, Plot, Country, Province, `Plant cover (m²)`, 
-            Latitude, Longitude, d13C)) %>%
+            Latitude, Longitude)) %>%
   select(order(colnames(.))) %>%
   relocate(Plot_code, Name) %>%
   mutate(Name = recode(Name, `Arbutus unedu` = "Arbutus unedo",
@@ -82,18 +83,21 @@ riva_trait <- read_excel("data/raw/de la Riva et al. 2015/Dryad_database.xls") %
   mutate(across(where(is.numeric), ~replace_na(., mean(., na.rm = TRUE)))) %>%
   arrange(Name) %>%
   select(-c(cover)) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(D13C = D13C+abs(min(D13C))) %>%
+  mutate(D13C = D13C+0.00000000001)
+
 
 
 riva_trait_fd <- riva_trait 
 
 # Standardizing is done after the fd dataframe is made, otherwise the values are standardized twice
-riva_trait <- riva_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#riva_trait <- riva_trait %>%
+ # mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
 
 
-traitlist <- sort(c("Height", "Leaf_size",  "LDMC", "SLA", "LChl", "LNC", 
-                "SDMC", "WD", "RDMC", "SRL"))
+traitlist <- sort(c("D13C", "Height", "LA",  "LDMC", "SLA", "Leaf_chlor", "Leaf_N", 
+                "StDMC", "WD", "RDMC", "SRL"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 
@@ -106,7 +110,7 @@ riva_output <- lst(input_veg = riva_veg,
                      cutoff_value = 0.8,
                      trait_detail = "Plot",
                      trait_information = trait_information,
-                     study_name = "de la Riva")
+                     study_name = "Riva")
 
 save(riva_output,
  file = "data/processed/riva_prep.RData")

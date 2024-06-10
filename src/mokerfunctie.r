@@ -11,11 +11,22 @@ complete_analysis <- function(input_veg, input_veg_fd, input_trait, input_trait_
   #'
   #'
 
-  input_processed <- cats_preparation(input_veg = input_veg, 
+  input_processed_orig <- cats_preparation(input_veg = input_veg, 
                                       input_trait = input_trait,
                                       trait_information = trait_information, 
                                       cutoff_value = cutoff_value, 
                                       trait_detail = trait_detail)
+
+input_trait_try <- TRY_DATA %>% 
+    select(c(colnames(input_trait))) %>%
+    filter(Name %in% colnames(temp))
+
+  
+  input_processed_try <- cats_preparation(input_veg = input_veg, 
+                                          input_trait = input_trait_try,
+                                          trait_information = trait_information, 
+                                          cutoff_value = cutoff_value, 
+                                          trait_detail = trait_detail)
 
   diversity_info <- calculate_diversity_info(veg_data = input_veg, 
                                              veg_data_fd = input_veg_fd,

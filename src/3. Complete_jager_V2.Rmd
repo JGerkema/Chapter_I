@@ -26,6 +26,7 @@ source("src/functions.R")
 ```{r clean data}
 
 jager_trait <- read_csv("data/raw/Jager et al. 2014/speciestraits.csv")
+coordinates <- read_csv("data/raw/Jager et al. 2014/plotenvironmentcoordinates.csv")
 
 species_list <- read_excel("data/raw/Jager et al. 2014/speciescode_list.xlsx")
 
@@ -40,11 +41,14 @@ jager_veg <- read_csv("data/raw/Jager et al. 2014/speciesbasalarea.csv") %>%
 
 jager_trait <- jager_trait %>%
   full_join(species_list) %>%
-  rename(LT = leafthick, SLA = sla, LDMC = ldmc, WD = wood, Height = height, 
-         SM = `seed mass`, BT = bark, relBT = `relative bark thickness`) %>%
+  rename(Leaf_thickness= leafthick, Leaf_density = leafden, SLA = sla, 
+         LDMC = ldmc, WD = wood, Height = height, Bark_thickness = bark,
+         SM = `seed mass`, Bark_thickness_rel = `relative bark thickness`,
+         Leaf_N = leafn, Leaf_P = leafp, Litter_N = littern, 
+         Litter_P = litterp, StDMC = tdmc) %>%
   select(-c(species)) %>%
-  mutate(BT = BT + 0.00001,
-         relBT = BT + 0.0001) %>%
+  mutate(Bark_thickness = Bark_thickness + 0.00001,
+         Bark_thickness_rel = Bark_thickness_rel + 0.0001) %>%
   select(order(colnames(.))) %>%
   relocate(Name) %>%
   arrange(Name)
@@ -52,13 +56,14 @@ jager_trait <- jager_trait %>%
 jager_trait_fd <- jager_trait %>%
   column_to_rownames(var = "Name") 
 
-jager_trait <- jager_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F))))  
+#jager_trait <- jager_trait %>%
+ # mutate(across(where(is.numeric), ~ c(scale(., center = F))))  
 
 jager_species_list <- colnames(jager_veg)
 
-traitlist <- sort(c("LT", "BT", "SLA", "leafden", "LDMC", "tdmc", "WD", "relBT", 
-                    "leafn", "leafp", "littern", "litterp", "Height", "SM"))
+traitlist <- sort(c("Leaf_thickness", "Bark_thickness", "Bark_thickness_rel",
+                    "SLA", "Leaf_density", "LDMC", "StDMC", "WD", 
+                    "Leaf_N", "Leaf_P", "Litter_N", "Litter_P", "Height", "SM"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

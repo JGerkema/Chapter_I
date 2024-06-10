@@ -54,8 +54,7 @@ castro_vegtemp <- castro_veg %>%
 
 castro_veg <- castro_veg %>%
   select(-c(Sites, Replicate, Treatment)) %>%
-  column_to_rownames(var = "Plot_code") %>% 
-  as.matrix()
+  column_to_rownames(var = "Plot_code") 
 
 
 # They did not measure traits for each species in each species. Instead, they measured the traits only for the 80% most abundant ones. 
@@ -63,7 +62,7 @@ castro_veg <- castro_veg %>%
 castro_trait <- read_excel("data/raw/CESTES/Plant_data/Castro2010_AJ.xlsx", 
     sheet = "traitsfull") %>%
   separate(Spraw, into = c("Name", "Treatment"), sep = "_") %>%
-  rename(Height = VH) %>%
+  rename(Height = VH, Leaf_N = LNC, Leaf_C = LCC) %>%
   select(-c(LF, M, Pollination, Dispersal, LPC, Spnew, Sp)) %>% # LPC removed, was not used in the original publication'
   mutate(Name = recode(Name, "Hypochoeris glabra" = "Hypochaeris glabra")) %>%
   full_join(castro_vegtemp) %>%
@@ -79,11 +78,11 @@ castro_trait <- read_excel("data/raw/CESTES/Plant_data/Castro2010_AJ.xlsx",
 castro_trait_fd <- castro_trait 
 
 # Standardizing is done after the fd dataframe is made, otherwise the values are standardized twice
-castro_trait <- castro_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#castro_trait <- castro_trait %>%
+ # mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
 
 
-traitlist <- sort(c("Height", "LCC", "LDMC", "LNC", "SLA", "SM"))
+traitlist <- sort(c("Height", "Leaf_C", "LDMC", "Leaf_N", "SLA", "SM"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

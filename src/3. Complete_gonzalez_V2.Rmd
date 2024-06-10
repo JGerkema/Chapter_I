@@ -25,6 +25,8 @@ source("src/functions.R")
 ### 1.1 
 ```{r clean data}
 
+plot_meta <- read_csv("data/raw/González et al. 2021/bdj-09-e69560-s001.csv")
+
 gonzalez_species_list <- read_csv("data/raw/González et al. 2021/BIOVERA-tree_scientific_name.csv")
 
 removed_author <- gonzalez_species_list %>%
@@ -38,7 +40,8 @@ removed_author <- gonzalez_species_list %>%
   mutate(treeIdentification = paste0(genus, " ", sp2)) %>%
   select(treeIdentification, treeIdentificationID, family) %>%
   mutate(treeIdentification = recode(treeIdentification, "Diospyros digyna" = "Diospyros nigra",
-                                     "Sapium nitidum" = "Sapium lateriflorum"))
+                                     "Sapium nitidum" = "Sapium lateriflorum",
+                                     "Trema micranthum" = "Trema micrantha"))
   # The synonym of Diospyros digyna Jacq. is Diospyros nigra 
  # (according to WFO: https://www.worldfloraonline.org/taxon/wfo-0000648775)
 
@@ -72,7 +75,9 @@ gonzalez_trait <- read_csv("data/raw/González et al. 2021/BIOVERA-tree_function
   pivot_wider(values_from = traitValue, names_from = traitName) %>%
   drop_na() %>%
   rename(LA = leafArea, LDMC = leafDryMatterContent, Height = maximumHeight,
-         SLA = specificLeafArea, WD = woodDensity) %>%
+         SLA = specificLeafArea, WD = woodDensity, Leaf_thickness = leafThickness,
+         Leaf_chlor = chlorophyllContent, Leaf_density = laminaDensity
+         ) %>%
   select(order(colnames(.))) %>%
   relocate(Name) %>%
   arrange(Name)
@@ -85,11 +90,11 @@ species_list_fd <- gonzalez_trait %>% pull(Name)
 gonzalez_veg_fd <- gonzalez_veg %>%
   select(all_of(species_list_fd))
 
-gonzalez_trait <- gonzalez_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#gonzalez_trait <- gonzalez_trait %>%
+#  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
 
-traitlist <- sort(c( "chlorophyllContent", "Height", "LA", "laminaDensity", "LDMC",
-                     "leafThickness", "SLA", "WD"))
+traitlist <- sort(c( "Leaf_chlor", "Height", "LA", "Leaf_density", "LDMC",
+                     "Leaf_thickness", "SLA", "WD"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 
@@ -98,7 +103,7 @@ trait_information <- lst(traitlist, cwm_names, cwv_names)
 gonzalez_output <- lst(input_veg = gonzalez_veg, 
                      input_veg_fd = gonzalez_veg_fd,
                      input_trait = gonzalez_trait,
-                     input_trait_fd = gonzalez_veg_fd,
+                     input_trait_fd = gonzalez_trait_fd,
                      cutoff_value = 0.8,
                      trait_detail = "Study",
                      trait_information = trait_information,

@@ -1,5 +1,6 @@
 maxent2 <- function (constr, states, prior, tol = 1e-07, lambda = FALSE) {
-    if (is.vector(constr)) {
+
+  if (is.vector(constr)) {
         means.names <- names(constr)
         constr <- matrix(constr, 1, length(constr))
         dimnames(constr) <- list("set1", means.names)

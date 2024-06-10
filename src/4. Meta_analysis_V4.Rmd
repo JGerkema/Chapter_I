@@ -26,61 +26,399 @@ source("src/functions.R")
 ## 1. Load data
 ```{r load data}
 
-load("~/0. PhD/0. Chapter I/data/processed/aiello1992_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/aiello2011_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/bagaria_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/bergholz_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/buzzard_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/castro_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/chalmandrier_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/choler_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/eallonardo_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/frenette2009_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/frenette2010_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/jaschke_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/kembel_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/liane_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/marteinsdottir_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/raevel_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/riva_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/rolhauser_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/kassaw_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/gonzalez_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/standen_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/makelele_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/jager_prep.RData")
-load("~/0. PhD/0. Chapter I/data/processed/osuri_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/aiello1992_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/aiello2011_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/kober_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/buzzard_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/castro_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/chalmandrier_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/choler_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/eallonardo_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/frenette2009_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/frenette2010_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/jaschke_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/kembel_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/liane_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/marteinsdottir_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/raevel_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/riva_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/rolhauser_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/asefa_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/gonzalez_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/standen_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/makelele_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/jager_prep.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/osuri_prep.RData")
 
 meta_data <- read_excel("docs/data/Overview_datasets.xlsx")
+
 load("~/0. PhD/0. Chapter I/data/processed/try_traits_tax_final.RData")
 
 
-trait_imp <- read_csv("data/processed/trait_imp261.csv") %>%
-  select(-c(`...1`))
+trait_imp <- read_csv("data/processed/trait_imp_final311.csv") %>%
+  select(-c(`...1`)) %>%
+  rename(Name = wfo_match)
 
-colnames(trait_imp)
+classification <- read_delim("data/raw/classification202312.csv", 
+    delim = "\t", escape_double = FALSE, 
+    trim_ws = TRUE)
+
+trait_imp_specieslvl <- trait_imp %>%
+  group_by(Name, acceptedNameUsageID, genus, family, order) %>%
+  summarise(across(where(is.numeric), ~mean(., na.rm = T))) %>%
+  ungroup() %>%
+  rename(LA = "Leaf area (in case of compound leaves: leaflet, undefined if petiole is in- or excluded)",
+         Bark_thickness = "Bark thickness",
+         Leaf_C = "Leaf carbon (C) content per leaf dry mass",
+         D13C = "Leaf carbon isotope signature (delta 13C)",
+         Leaf_chlor = "Leaf chlorophyll content per leaf dry mass",
+         Leaf_N = "Leaf nitrogen (N) content per leaf dry mass",
+         Leaf_P = "Leaf phosphorus (P) content per leaf dry mass",
+         Leaf_thickness = "Leaf thickness",
+         Height = "Plant height vegetative",
+         SM = "Seed dry mass",
+         PLS = "Plant lifespan (longevity)",
+         Leaf_width = "Leaf width",
+         SLA = "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded",
+         Leaf_density = "Leaf density (leaf tissue density, leaf dry mass per leaf volume)",
+         Leaf_CN = "Leaf carbon/nitrogen (C/N) ratio",
+         LDMC = "Leaf dry mass per leaf fresh mass (leaf dry matter content, LDMC)",
+         Litter_N = "Litter nitrogen (N) content per litter dry mass",
+         Litter_P = "Litter phosphorus (P) content per litter dry mass",
+         Photo_rate = "Photosynthesis rate per leaf area",
+         Seed_length = "Seed length",
+         WD = "Stem specific density (SSD, stem dry mass per stem fresh volume) or wood density",
+         Leaf_resp  = "Leaf respiration rate in the dark per leaf area",
+         Root_diam = "Root diameter",
+         Root_poros = "Root porosity (fraction of root aerenchyma air space)",
+         SRL = "Root length per root dry mass (specific root length, SRL)",
+         RDMC  = "Root dry mass per root fresh mass (root dry matter content; RDMC)",
+         StDMC =  "Stem dry mass per stem fresh mass (stem dry matter content, StDMC)")
+
 ```
 
 
 ```{r big compilation}
 
-temp <- kassaw_output$input_veg
 
-trait_imp_wide <- trait_imp %>%
-  pivot_wider(names_from = Trait, )
+test_function <- function(input_veg, input_veg_fd, input_trait, input_trait_fd, trait_information, 
+                         cutoff_value, trait_detail, study_name){
+  
+  extract <- included_now %>%
+                filter(study == study_name)
+  
+  not_included_traits <- c("Leaf_angle", "Photo_path", "Root_density", "Lateral_spread",
+                           "Resprout", "Bark_thickness_rel", "Rhizome", "Stem_emerg",
+                           "ShootDMC", "Leaf_shape", "Root_diam", "twFWC", "FWC")
+  
+  traits_orig <- trait_information[["traitlist"]]
+
+  traits_filtered <- traits_orig[traits_orig %notin% not_included_traits]  
+  
+  traitlist <- sort(c(traits_filtered))
+  cwm_names <- paste0(traitlist, "_cwm")
+  cwv_names <- paste0(traitlist, "_cwv")
+
+  trait_information <- lst(traitlist, cwm_names, cwv_names)
+  
+  if(nrow(extract) > 0){
+    
+  input_veg <- input_veg %>%
+   rename(!!!setNames(extract$Orig_name, extract$Name)) %>%
+   select(order(colnames(.)))
+  
+  input_trait <- input_trait %>%
+    mutate(Name = case_when(
+    Name %in% extract$Orig_name ~ extract$Name[match(Name, extract$Orig_name)],
+    TRUE ~ Name)) %>%
+    arrange(Name)
+  } 
+  
+  if(trait_detail == "Study"){
+  input_trait <- input_trait %>%
+    select(Name, all_of(traits_filtered))
+  } else{
+    input_trait <- input_trait %>%
+    select(Name, Plot_code, all_of(traits_filtered))
+  }
+  
+
+  input_processed_orig <- cats_preparation(input_veg = input_veg, 
+                                      input_trait = input_trait,
+                                      trait_information = trait_information, 
+                                      cutoff_value = cutoff_value, 
+                                      trait_detail = trait_detail)
+  
+  diversity_info <- calculate_diversity_info(veg_data = input_veg, 
+                                             input_veg_fd = input_veg_fd,
+                                             input_processed = input_processed_orig, 
+                                             trait_fd = input_trait_fd,  
+                                             trait_detail = trait_detail, 
+                                             study_name = study_name)
+
+    input_trait_try <- trait_imp_specieslvl %>% 
+         select(c(Name, traits_filtered)) %>%
+         filter(Name %in% 
+                  colnames(input_processed_orig[["relative_abundances"]][["matrix4traits_prop"]])) 
+
+  
+  input_processed_try <- cats_preparation(input_veg = input_veg, 
+                                      input_trait = input_trait_try,
+                                      trait_information = trait_information, 
+                                      cutoff_value = 0.6, 
+                                      trait_detail = "Study")
+  
+  if(foreach::getDoParRegistered() != TRUE){
+    n_cores <- parallel::detectCores() - 5 
+    
+    my_cluster <- makeSOCKcluster(n_cores)
+    
+    registerDoSNOW(cl = my_cluster)}   
+
+  
+  cats_output_orig <- cats_calculations(input_processed_orig, trait_information, trait_detail) %>%
+    mutate(study = study_name)
+
+  cats_output_try <- cats_calculations(input_processed_try, trait_information, trait_detail = "Study") %>%
+    mutate(study = study_name)
 
 
+  all_ouput <- lst(diversity_info, input_processed_orig, input_processed_try, cats_output_orig,  cats_output_try) 
+  
+  return(all_ouput)
+  
+    }
+dataset <- riva_output
+output_list_backup <- output_list
+output_list <- lst()
+
+data_input_list <-  lst(aiello1992_output, aiello2011_output, buzzard_output, castro_output, chalmandrier_output, choler_output, eallonardo_output, frenette2009_output, frenette2010_output, gonzalez_output, kober_output, jager_output, jaschke_output, asefa_output, kembel_output, liane_output, makelele_output, marteinsdottir_output, osuri_output, raevel_output, riva_output, standen_output, rolhauser_output)
+
+for(i in 1:length(data_input_list)){
+  
+  dataset <- data_input_list[[i]]
+
+  output <- test_function(input_veg = dataset[["input_veg"]], 
+                          input_veg_fd = dataset[["input_veg_fd"]],
+                          input_trait = dataset[["input_trait"]],
+                          input_trait_fd = dataset[["input_trait_fd"]],
+                          cutoff_value = dataset[["cutoff_value"]],
+                          trait_detail = dataset[["trait_detail"]],
+                          trait_information = dataset[["trait_information"]],
+                          study_name = dataset[["study_name"]])
+
+  output_list[[i]] <- output
+
+}
+
+
+
+temp_fig <- data.frame()
+
+for(i in 1:length(output_list)){
+  
+  
+  cats_output <- output_list[[i]][["cats_output_orig"]]
+  diversity_info <- output_list[[i]][["diversity_info"]]
+  
+  cats_output_combined_orig <- cats_visualisation(cats_output, "Orig")
+  
+  cats_output <- output_list[[i]][["cats_output_try"]]
+  diversity_info <- output_list[[i]][["diversity_info"]]
+  
+  cats_output_combined_try <- cats_visualisation(cats_output, "Try")
+  
+  temp_fig <- bind_rows(temp_fig, cats_output_combined_orig, cats_output_combined_try)
+  
+  
+  
+}
+
+
+
+
+
+```
+
+```{r species}
+
+data_input_list <-  lst(aiello1992_output, aiello2011_output, buzzard_output, castro_output, chalmandrier_output, choler_output, eallonardo_output, frenette2009_output, frenette2010_output, gonzalez_output, kober_output, jager_output, jaschke_output, asefa_output, kembel_output, liane_output, makelele_output, marteinsdottir_output, osuri_output, raevel_output, riva_output, rolhauser_output, standen_output)
+
+study_lwc <- c("Aiello1992", "Aiello2011", "Buzzard", "Castro", "Chalmandrier", "Choler", "Eallonardo", "Frenette2009", "Frenette2010", "Gonzalez", "Kober", "Jager", "Jäschke", "Asefa", "Kembel", "Liane", "Makelele", "Marteinsdottir", "Osuri", "Raevel", "Riva", "Rolhauser", "Standen"
+)
+
+output_species <- data.frame()
+
+for(i in 1:length(data_input_list)){
+  
+  
+  input <- data_input_list[[i]]
+  
+  species <- input[["input_trait"]] %>% 
+  as.data.frame() %>%
+  select(Name) %>%
+  mutate(study = study_lwc[i]) %>%
+  distinct()
+  
+  output_species <- bind_rows(output_species, species)
+  
+  
+}
+
+excluded <- output_species %>%
+  filter(Name %notin% trait_imp$Name)  %>%
+  rename(Orig_name = Name)# 458 unique names
+
+check <- classification %>%
+  filter(scientificName %in% excluded$Orig_name) %>%
+  select(scientificName, acceptedNameUsageID, nomenclaturalStatus) %>%
+  drop_na(acceptedNameUsageID) %>%
+  rename(Orig_name = scientificName) %>%
+  distinct() # 490
+
+included_now <- trait_imp_specieslvl %>%
+  filter(acceptedNameUsageID %in% check$acceptedNameUsageID) %>%
+  select(Name, acceptedNameUsageID) %>%
+  left_join(check) %>%
+  distinct() %>%
+  filter(acceptedNameUsageID %notin% c("wfo-0000845609", "wfo-0000871222",
+                                       "wfo-0000871854", "wfo-0000288166",
+                                       "wfo-0000881302")) %>%
+ filter(Orig_name %notin% c("Ehrharta ramosa", "Randia subcordata",
+    "Typha glauca", "Eruca sativa", "Fraxinus dubia",
+    "Quercus lancifolia", "Saussurea superba", "Smilacina racemosa")) %>%
+  select(-c(nomenclaturalStatus)) %>%
+  distinct() %>%
+  group_by(Orig_name) %>%
+  filter(n() == 1) %>%
+  ungroup() %>%
+  left_join(excluded)
+
+
+
+species_list_complete <- data.frame()
+
+for(i in 1:length(data_input_list)){
+  
+  
+  input <- data_input_list[[i]]
+  
+  species <- colnames(input[["input_veg"]]) %>% 
+  as.data.frame() %>%
+  rename(Name = ".") %>%
+  mutate(study = study_lwc[i])
+  
+  extract <- included_now %>%
+                filter(study == study_lwc[[i]])
+  
+  species <- species %>%
+    filter(Name %in% extract$Name)
+  
+  
+  species_list_complete <- bind_rows(species_list_complete, species)
+  
+  
+}
+
+total_species_list <- included_now %>%
+  select(c(Name, study)) %>%
+  bind_rows(output_species) #1609
+
+length(unique(total_species_list$Name))
+length(unique(na_check$wfo_match))
+
+na_check <- try_traits_tax_final %>%
+  filter(wfo_match %in% total_species_list$Name) %>%
+  select(c(wfo_match, TraitName, StdValue)) %>%
+  group_by(wfo_match, TraitName) %>%
+  summarize(across(where(is.numeric), ~mean(., na.rm = T))) %>%
+  ungroup() %>%
+  pivot_wider(values_from = StdValue, names_from = TraitName) 
+
+save <- as.data.frame(rowSums(is.na(na_check)))
+
+na_n_species <- (colSums(is.na(na_check))) %>%
+  data.frame() %>%
+  rename(na_n = ".") %>%
+  mutate(perc_na = na_n/nrow(na_check)) %>%
+  rownames_to_column(var = "Trait") %>%
+  filter(Trait %notin% c("wfo_match"))
+
+check2 <- included_now %>%
+  filter(Name %in% species_list_complete$Name)
+
+check3 <- trait_imp_specieslvl %>%
+  filter(genus == "Carex")
 
 ``` 
 
+
+```{r trait names change}
+
+trait_imp <- trait_imp %>%
+  rename(LA = "Leaf area (in case of compound leaves: leaflet, undefined if petiole is in- or excluded)",
+         Bark_thickness = "Bark thickness",
+         Leaf_C = "Leaf carbon (C) content per leaf dry mass",
+         D13C = "Leaf carbon isotope signature (delta 13C)",
+         Leaf_chlor = "Leaf chlorophyll content per leaf dry mass",
+         Leaf_N = "Leaf nitrogen (N) content per leaf dry mass",
+         Leaf_P = "Leaf phosphorus (P) content per leaf dry mass",
+         Leaf_thickness = "Leaf thickness",
+         Height = "Plant height vegetative",
+         SM = "Seed dry mass",
+         PLS = "Plant lifespan (longevity)",
+         Leaf_width = "Leaf width",
+         SLA = "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded",
+         Leaf_density = "Leaf density (leaf tissue density, leaf dry mass per leaf volume)",
+         Leaf_CN = "Leaf carbon/nitrogen (C/N) ratio",
+         LDMC = "Leaf dry mass per leaf fresh mass (leaf dry matter content, LDMC)",
+         Litter_N = "Litter nitrogen (N) content per litter dry mass",
+         Litter_P = "Litter phosphorus (P) content per litter dry mass",
+         Photo_rate = "Photosynthesis rate per leaf area",
+         Seed_length = "Seed length",
+         WD = "Stem specific density (SSD, stem dry mass per stem fresh volume) or wood density",
+         Leaf_resp  = "Leaf respiration rate in the dark per leaf area",
+         Root_diam = "Root diameter",
+         Root_poros = "Root porosity (fraction of root aerenchyma air space)",
+         SRL = "Root length per root dry mass (specific root length, SRL)",
+         RDMC  = "Root dry mass per root fresh mass (root dry matter content; RDMC)",
+         StDMC =  "Stem dry mass per stem fresh mass (stem dry matter content, StDMC)"         )
+
+
+
+```
+
 ```{r old}
-ggplot(test2, aes(x = species_richness, y = KLR2, colour = study, shape = Habitat_short)) +
+
+temp_fig_try <- temp_fig %>%
+  filter(traits == "Try") %>%
+  select(species_richness, KLR2, Deviance, study, Plot_code) %>%
+  rename(KLR2_try = KLR2 )
+
+temp_fig_orig <- temp_fig %>%
+  filter(traits == "Orig") %>%
+  select(species_richness, KLR2, Deviance, study, Plot_code) %>%
+  rename(KLR2_orig = KLR2      ) %>%
+  inner_join(temp_fig_try)
+
+ggplot(temp_fig_orig, aes(KLR2_orig, KLR2_try,  colour = study)) +
+  geom_point(alpha = 0.3) +
+   facet_wrap(~Deviance, scales = "free") + 
+  theme_classic() +
+  geom_smooth(method = "lm", se = F)  +
+    geom_hline(yintercept = 0, linetype = 2) +
+   #coord_cartesian(ylim = c(-0.4, 1), ) +
+  scale_y_continuous(breaks = c(-0.4, -0.2, 0,0.2, 0.4, 
+    0.6,  0.8,  1
+  )) + labs(col = "Dataset", shape = "Habitat type")
+
+ggplot(temp_fig_try, aes(x = species_richness, y = KLR2, colour = study)) +
   geom_point(alpha = 0.3) +
   facet_wrap(~Deviance) + 
   theme_classic() +
   geom_smooth(method = "lm", se = F) + 
-  labs(title = "The relationship between species richness and the CATS decomposition",  
-       x = "Species richness") +
+  labs(title = "The relationship between species richness and the CATS decomposition - TRY values",  
+       x = "Local species richness") +
   geom_hline(yintercept = 0, linetype = 2) +
    coord_cartesian(ylim = c(-0.4, 1)) +
   scale_y_continuous(breaks = c(-0.4, -0.2, 0,0.2, 0.4, 
@@ -161,7 +499,7 @@ study_input <- sort(unique(test2$study))
 
 study_lwc <- tolower(study_input)
 
-study_lwc <- c("aiello1992", "aiello2011", "bagaria",  "buzzard", "castro", "chalmandrier", "choler", "eallonardo", "frenette2009", "frenette2010", "gonzalez", "jager", "jäschke", "kassaw", "kembel", "liane", "makelele", "marteinsdottir", "osuri", "raevel", "riva", "rolhauser", "standen"
+study_lwc <- c("Aiello1992", "Aiello2011", "Bagaria",  "Buzzard", "Castro", "Chalmandrier", "Choler", "Eallonardo", "Frenette2009", "Frenette2010", "Gonzalez", "Jager", "Jäschke", "Kassaw", "Kembel", "Liane", "Makelele", "Marteinsdottir", "Osuri", "Raevel", "Riva", "Rolhauser", "Standen"
 )
 
 
@@ -345,7 +683,7 @@ family_count <- final_final_final %>%
   select(c(study, family))  %>%
   distinct()
 
-
+ve
 
 genus_count <-  table(genus_count$study) %>% as.data.frame() %>%
   rename(study = Var1, genus_n = Freq)

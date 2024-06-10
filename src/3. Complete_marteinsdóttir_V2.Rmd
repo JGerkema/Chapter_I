@@ -67,8 +67,8 @@ marteinsdottir_trait <- read_excel("data/raw/CESTES/Plant_data/Marteinsdottir201
 marteinsdottir_trait_fd <- marteinsdottir_trait %>%
   column_to_rownames(var = "Name")
 
-marteinsdottir_trait <- marteinsdottir_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#marteinsdottir_trait <- marteinsdottir_trait %>%
+#  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
 
 
 traitlist <- sort(c( "LDMC", "SLA"))

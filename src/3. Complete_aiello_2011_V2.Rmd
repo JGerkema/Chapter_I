@@ -29,12 +29,16 @@ source("src/functions.R")
 aiello <- read_csv("data/raw/Aiello-Lammens et al. 2016/baviaanskloof_data_dryad.csv") %>%
   filter(Survey == "2011a") %>%
   rename(Name = Species, Plot_code = Plot,  cover = PercCover,
-         Height = Height.Mean, LMA = LMA.Mean, Thickness = LeafThickness.Mean,
-         LWR = LWR.Mean, FWC = FWC.Mean, FWC = FWC.Mean, twFWC = twFWC.Mean,
-         Width = LeafWidthMax.Mean) %>%
-  mutate(Name = recode(Name, "Erica newdigateae" = "Erica newdigatei",
-                       "Hypodiscus albo-aristatus" = "Hypodiscus alboaristatus",
-                       "Pegolettia baccaridifolia" = "Pegolettia baccharidifolia"))
+         Height = Height.Mean, LMA = LMA.Mean, Leaf_thickness = LeafThickness.Mean,
+         Leaf_shape = LWR.Mean, FWC = FWC.Mean, FWC = FWC.Mean, twFWC = twFWC.Mean,
+         Leaf_width = LeafWidthMax.Mean, Resprout = resprout_postfire) %>%
+  mutate(Name = recode(Name,  "Hypodiscus albo-aristatus" = "Hypodiscus alboaristatus",
+                       "Pegolettia baccaridifolia" = "Pegolettia baccharidifolia",
+                       #"Machairophyllum bijlii" = "Machairophyllum bijliae",
+                       "Erica passerinaee" = "Erica passerina",
+                        "Rhodocoma capensis" = "Rhodocoma capense",
+                       "Paranomus esterhuyseniae" = "Paranomus esterhuysenae"))
+                      # "Afroaster hispidus" = "Afroaster hispida"))
 
 aiello_veg <- aiello %>%
   select(Name, Plot_code, cover) %>%
@@ -46,8 +50,9 @@ aiello_veg <- aiello %>%
 #aiello2011_species_list <- colnames(aiello_veg)
 
 aiello_trait <- aiello %>%
-  select(Name, resprout_postfire, Height, LMA, Thickness, LWR, FWC,
-         twFWC, Width) %>% distinct() %>%
+  mutate(SLA = 1/LMA) %>%
+  select(Name, Resprout, Height, SLA, Leaf_thickness, Leaf_shape, FWC,
+         twFWC, Leaf_width) %>% distinct() %>%
   select(order(colnames(.))) %>%
   relocate(Name) %>%
   arrange(Name) %>%
@@ -63,12 +68,12 @@ aiello_veg_fd <- aiello_veg %>%
   select(all_of(species_list_fd))
 
 aiello_trait <- aiello_trait %>%
-  mutate(resprout_postfire = recode(resprout_postfire, `0` = 1,
-                             `1`  =  2)) %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+  mutate(Resprout = recode(Resprout, `0` = 1,
+                             `1`  =  2)) #%>%
+  #mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
   
-traitlist <- sort(c( "resprout_postfire", "Height", "LMA", "Thickness", "LWR", 
-                     "FWC", "twFWC", "Width"))
+traitlist <- sort(c("Resprout", "Height", "SLA", "Leaf_thickness", "Leaf_shape", 
+                     "FWC", "twFWC", "Leaf_width"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 
@@ -81,7 +86,7 @@ aiello2011_output <- lst(input_veg = aiello_veg,
                          cutoff_value = 0.8,
                          trait_detail = "Study",
                          trait_information = trait_information,
-                         study_name = "Aiello1992")
+                         study_name = "Aiello2011")
 
 save(aiello2011_output,
  file = "data/processed/aiello2011_prep.RData")

@@ -45,14 +45,16 @@ kembel_trait <- kembel %>%
   mutate(across(where(is.numeric), ~replace_na(., mean(., na.rm = TRUE)))) %>%
   select(-c(cover)) %>%
   ungroup() %>%
+  rename(Leaf_thickness = LeafThickness, Leaf_density = LeafTissueDens,
+         Root_diam = RootDiam, Root_density = RootTissueDens) %>%
   select(order(colnames(.))) %>%
-  relocate(Plot_code, Name) %>%
+  relocate(Plot_code, Name) %>% 
   arrange(Name) 
 
 kembel_trait_fd <- kembel_trait
 
-kembel_trait <- kembel_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#kembel_trait <- kembel_trait %>%
+ # mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
   
 
 kembel_veg <- kembel_veg %>%
@@ -61,7 +63,7 @@ kembel_veg <- kembel_veg %>%
   select(order(colnames(.)))
 
 
-traitlist <- sort(c( "LA", "LeafThickness", "LeafTissueDens", "RootDiam", "RootTissueDens",
+traitlist <- sort(c( "LA", "Leaf_thickness", "Leaf_density", "Root_diam", "Root_density",
                      "SLA", "SRL"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")

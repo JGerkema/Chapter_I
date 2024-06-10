@@ -69,30 +69,34 @@ relative_cover_check <- rowSums(eallonardo_veg) %>% as.data.frame()
 eallonardo_trait <- read_excel("data/raw/CESTES/Plant_data/Eallonardo2013_AJ.xlsx", 
   sheet = "traitsfull")  %>%
   full_join(eallonardo_species_list) %>%
-  rename(LA = Area_mm2, SLA = SLA_mm2_mg, Height = mature_ht_cm) %>%
-  select(c(Name, LA, SLA, Height, C4, Perennial,
-           Rhizomatous, nmass, cn)) %>%
-  mutate(C4 = recode(C4, `1` = 2,
+  rename(LA = Area_mm2, SLA = SLA_mm2_mg, Height = mature_ht_cm,
+         Photo_path = C4, Leaf_CN = cn, Rhizome = Rhizomatous,
+         Leaf_N = nmass, PLS = Perennial) %>%
+  select(c(Name, LA, SLA, Height, Photo_path, PLS,
+           Rhizome, Leaf_N, Leaf_CN)) %>%
+  mutate(Photo_path = recode(Photo_path, `1` = 2,
                             `0`  =  1),
-         Perennial = recode(Perennial, `1` = 2,
+         PLS = recode(PLS, `1` = 2,
                              `0`  =  1),
-         Rhizomatous = recode(Rhizomatous, `1` = 2,
+         Rhizome = recode(Rhizome, `1` = 2,
                              `0`  =  1)) %>%
   group_by(Name) %>%
   summarise(across(where(is.numeric), ~mean(.))) %>%
   ungroup() %>%
   select(order(colnames(.))) %>%
   relocate(Name) %>%
-  arrange(Name) %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+  arrange(Name) #%>%
+  #mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
 
 
 eallonardo_trait_fd <- read_excel("data/raw/CESTES/Plant_data/Eallonardo2013_AJ.xlsx", 
   sheet = "traitsfull")  %>%
   full_join(eallonardo_species_list) %>%
-  rename(LA = Area_mm2, SLA = SLA_mm2_mg, Height = mature_ht_cm) %>%
-  select(c(Name, LA, SLA, Height, C4, Perennial,
-           Rhizomatous, nmass, cn)) %>%
+  rename(LA = Area_mm2, SLA = SLA_mm2_mg, Height = mature_ht_cm,
+         Photo_path = C4, Leaf_CN = cn, Rhizome = Rhizomatous,
+         Leaf_N = nmass, PLS = Perennial) %>%
+  select(c(Name, LA, SLA, Height, Photo_path, PLS,
+           Rhizome, Leaf_N, Leaf_CN)) %>%
   select(order(colnames(.))) %>%
   group_by(Name) %>%
   summarise(across(where(is.numeric), ~mean(.))) %>%
@@ -101,8 +105,8 @@ eallonardo_trait_fd <- read_excel("data/raw/CESTES/Plant_data/Eallonardo2013_AJ.
   arrange(Name) %>%
   column_to_rownames(var = "Name")
 
-traitlist <- sort(c("C4", "cn", "Height", "LA", "nmass",
-                    "Perennial", "Rhizomatous", "SLA"))
+traitlist <- sort(c("Photo_path", "Leaf_CN", "Height", "LA", "Leaf_N",
+                    "PLS", "Rhizome", "SLA"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

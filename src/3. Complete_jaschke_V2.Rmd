@@ -32,7 +32,8 @@ jaschke <- read_excel("data/raw/Jäschke et al. 2019/PademosTibetTraitData-Dryad
   mutate(Name = recode(Name, "Elymus dura" = "Elymus durus",
                        "Ixeris chinensis ssp versicolor" = "Ixeris chinensis subsp. versicolor",
                        "Potentilla parvifollia" = "Potentilla parvifolia",
-                       "Convolvulus amanii" = "Convolvulus ammannii"))
+                       "Convolvulus amanii" = "Convolvulus ammannii",
+                        "Caragana versicolor" = "Caragana versicolar"))
 
 jaschke_veg <- jaschke %>%
   select(c(Plot_code, cover, Name)) %>%
@@ -57,17 +58,18 @@ jaschke_trait <- jaschke %>%
   mutate(across(where(is.numeric), ~replace_na(., mean(., na.rm = TRUE)))) %>%
   select(-c(cover)) %>%
   ungroup() %>%
+  rename(Leaf_CN = CN) %>%
   select(order(colnames(.))) %>%
   relocate(Plot_code, Name) %>%
   arrange(Name) 
 
 jaschke_trait_fd <- jaschke_trait
 
-jaschke_trait <- jaschke_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#jaschke_trait <- jaschke_trait %>%
+ # mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
   
 
-traitlist <- sort(c("CN", "Height", "SLA" ))
+traitlist <- sort(c("Leaf_CN", "Height", "SLA" ))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 
@@ -89,73 +91,5 @@ save(jaschke_output,
 ``` 
 
 
-## 5. Perform calculations
-```{r calculations }
-
-jaschke_processed_specieslvl <- cats_preparation(input_veg = jaschke_veg, input_trait = jaschke_trait, cutoff_value =  0.8, trait_information = trait_information,
-                                                 trait_detail = "Plot")
-
-mean_dist <- calculate_mean_dist(jaschke_veg, jaschke_processed_specieslvl)
-
-FD_df <- calculate_FD_plotlvl(jaschke_processed_specieslvl, jaschke_veg, jaschke_trait_fd)
-
-diversity_info <- jaschke_processed_specieslvl[["relative_abundances"]][["matrix4traits_prop"]] %>% 
-  as.data.frame() %>% 
-  mutate(shannon = diversity(.[,1:ncol(.)], index = "shannon", MARGIN = 1, base = exp(1)),
-         simpson = diversity(.[,1:ncol(.)], index = "simpson", MARGIN = 1, base =exp(1)),
-         species_richness = specnumber(.[,1:ncol(.)], MARGIN = 1),
-         empty_states = ncol(jaschke_processed_specieslvl[["relative_abundances"]][["matrix4traits_prop"]]) - species_richness,
-         meta_size = ncol(jaschke_processed_specieslvl[["relative_abundances"]][["matrix4traits_prop"]])) %>%
-  select(shannon, simpson, species_richness, empty_states, meta_size) %>% # base = exp(1) gives the shannon index a log e base
-  rownames_to_column(var = "Plot_code") %>%
-  full_join(mean_dist) %>%
-  full_join(FD_df)
 
 
-```
-
-
-
-## 6. Cats model
-```{r cats calculations}
-
-jaschke_cats <- cats_calculations(jaschke_processed_specieslvl, trait_information,
-                             trait_detail = "Plot") %>%
-  mutate(study = "Jäschke")
-
-
-jaschke_figure <- cats_visualisation(jaschke_cats) %>%
-  mutate(study = "Jäschke")
-
-save(jaschke_processed_specieslvl, jaschke_figure, jaschke_species_list, jaschke_cats, 
-  file = "data/processed/jaschke_calculations.RData")
-
-ggplot(jaschke_figure, aes(x = species_richness, y = KLR2)) +
-  geom_point() +
-  facet_wrap(~Deviance) + 
-  theme_classic() +
-  geom_smooth(method = "lm") + 
-  labs(title = "The relationship between species richness and the CATS decomposition - Jäschke et al., 2019",
-       x = "Species richness") +
-  geom_hline(yintercept = 0, linetype = 2) +
-   coord_cartesian(ylim = c(-0.2, 1)) +
-  scale_y_continuous(breaks = c(-0.2, 0,0.2, 0.4, 
-    0.6,  0.8,  1
-  )) 
-
-ggplot(jaschke_figure, aes(x = mean_dist, y = KLR2)) +
-  geom_point() +
-  facet_wrap(~Deviance) + 
-  theme_classic() +
-  geom_smooth(method = "lm") + 
-  labs(title = "The relationship between plot dissimilarity and the CATS decomposition - Jäschke et al., 2019",  
-       x = "Average Bray-Curtis index value") +
-  geom_hline(yintercept = 0, linetype = 2) +
-   coord_cartesian(ylim = c(-0.2, 1)) +
-  scale_y_continuous(breaks = c(-0.2, 0,0.2, 0.4, 
-    0.6,  0.8,  1
-  )) 
-
-
-
-```

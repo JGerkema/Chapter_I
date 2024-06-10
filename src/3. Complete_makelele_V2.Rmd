@@ -26,11 +26,13 @@ source("src/functions.R")
 ```{r clean data}
 
 makelele <- read_csv("data/raw/Makelele et al. 2021/Yoko_chronosequence_transect.csv") %>%
-  rename(Plot_code = plots, Name = species)
+  rename(Plot_code = plots, Name = species) %>%
+  mutate(Name = recode(Name, "Quassia sylvestris" = "Quassia silvestris"))
 
 
 makelele_trait <- makelele %>%
   select(Name, SLA, LDMC, C, N, P, WD) %>%
+  rename(Leaf_C = C, Leaf_P = P, Leaf_N = N) %>%
   distinct() %>%
   group_by(Name) %>%
   summarise(across(where(is.numeric), ~mean(., na.rm = TRUE))) %>%
@@ -68,10 +70,10 @@ makelele_veg_fd <- makelele_veg %>%
 
 makelele_species_list <- colnames(makelele_veg_fd)
 
-makelele_trait <- makelele_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#makelele_trait <- makelele_trait %>%
+ # mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
 
-traitlist <- sort(c( "SLA", "LDMC", "C", "N", "P", "WD"))
+traitlist <- sort(c( "SLA", "LDMC", "Leaf_C", "Leaf_N", "Leaf_P", "WD"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

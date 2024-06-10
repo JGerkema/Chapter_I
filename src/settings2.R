@@ -6,8 +6,9 @@ list_of_packages <- c("tidyverse", "FD", "janitor", "progress", "readxl",
                       "vegan", "foreach", "doSNOW", "docstring", "renv", "ggcorrplot",
                       "reshape2", "conflicted", 
                       "remotes", "roxygen2", "devtools", "geosphere",
-                      "scales", "ecodist", "WorldFlora", "rtry")
-
+                      "scales", "ecodist", "WorldFlora", "rtry", "MuMIn",
+                      "AICcmodavg", "ggpubr", "car", "boot", "ggh4x")
+## rstatix gives problems with the foreach loop
 # Display numbers without scientific notation
 options(scipen = 15)   
 

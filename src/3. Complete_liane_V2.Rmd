@@ -43,8 +43,6 @@ species_list <- liane_veg %>%
   select(-c(cover)) %>%
   distinct() 
 
-check <- rowSums(liane_processed_specieslvl[["relative_abundances"]][["matrix_prop_match"]])
-
 liane_veg_long <- liane_veg %>%
   select(-c(pH, `Peat thick [m]`, `Moisture index`)) %>%
   pivot_longer(cols = 2:ncol(.), values_to = "cover", names_to = "Name")
@@ -73,10 +71,11 @@ liane_veg <- liane_veg_temp %>%
 liane_species_list <- colnames(liane_veg)
 
 liane_trait <- liane_trait %>%
-  rename(CN = `C/N`, LS = `Leave size [cm**2]`, Plot_code = Event,
+  rename(Leaf_N = `N [%]`, Leaf_C = `C [%]`, LA = `Leave size [cm**2]`, Plot_code = Event,
          Height = `Plant h [cm]`, Name = Species) %>%
-  select(c(Plot_code, Name, CN, LS, Height)) %>%
-  mutate(Name = recode(Name, `Scheuzeria palustris` = "Schezeria palustris")) %>%
+  mutate(Name =  recode(Name, "Scheuzeria palustris" = "Scheuzeria palustris",
+                         "Carex chordorhiza" = "Carex chordorrhiza")) %>%
+  select(c(Plot_code, Name, Leaf_N, Leaf_C, LA, Height)) %>%
   group_by(Plot_code, Name) %>%
   summarise(across(where(is.numeric), ~mean(., na.rm = TRUE))) %>%
   ungroup() %>%
@@ -100,10 +99,10 @@ liane_veg_fd <- liane_veg %>%
 
 liane_species_list <- colnames(liane_veg_fd)
 
-liane_trait <- liane_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#liane_trait <- liane_trait %>%
+#  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
  
-traitlist <- sort(c("Height", "LS", "CN"))
+traitlist <- sort(c("Height", "LA", "Leaf_N", "Leaf_C"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

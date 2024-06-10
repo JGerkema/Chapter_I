@@ -66,28 +66,29 @@ frenette_trait <- read_excel("data/raw/CESTES/Plant_data/Frenette2012a_AJ.xlsx",
   select(-c(LC13, LN15, SM, GrowthForm, FlowerOnset, Clon, VH, PosInflor, Sp,
             Succ, PastoralVal, LCNR)) %>% 
   # These traits where either categorical or they contained multiple NA's
-  rename(C4 = PhotoPath, Spinescence = Spin, Height = MH) %>%
-  mutate(C4 = recode(C4, `C4` = 2,
+  rename(Photo_path = PhotoPath, Stem_emerg = Spin, Height = MH,
+        Leaf_N = LNC, Leaf_C = LCC) %>%
+  mutate(Photo_path = recode(Photo_path, `C4` = 2,
                             `C3`  =  1),
-         Spinescence = recode(Spinescence, `Presence` = 2,
+         Stem_emerg = recode(Stem_emerg, `Presence` = 2,
                              `Absence`  =  1)) %>%
   mutate(across(Height, as.numeric)) %>%
   replace_na(list(Height = family_mean)) %>%
   select(order(colnames(.))) %>%
   relocate(Name) %>%
-  arrange(Name) %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = FALSE)))) 
+  arrange(Name) #%>%
+  #mutate(across(where(is.numeric), ~ c(scale(., center = FALSE)))) 
 
 frenette_trait_fd <- read_excel("data/raw/CESTES/Plant_data/Frenette2012a_AJ.xlsx", 
   sheet = "traitsfull") %>%
   full_join(frenette2009_species_list) %>% 
   select(-c(LC13, LN15, SM, GrowthForm, FlowerOnset, Clon, VH, PosInflor, Sp,
             Succ, PastoralVal, LCNR)) %>%
-  rename(C4 = PhotoPath,
-         Spinescence = Spin, Height = MH) %>%
-  mutate(C4 = recode(C4, `C4` = 1,
+  rename(Photo_path = PhotoPath, Stem_emerg = Spin, Height = MH,
+        Leaf_N = LNC, Leaf_C = LCC) %>%
+  mutate(Photo_path = recode(Photo_path, `C4` = 1,
                             `C3`  =  0),
-         Spinescence = recode(Spinescence, `Presence` = 1,
+         Stem_emerg = recode(Stem_emerg, `Presence` = 1,
                              `Absence`  =  0)) %>%
   mutate(across(Height, as.numeric)) %>%
   replace_na(list(Height = family_mean)) %>%
@@ -97,8 +98,8 @@ frenette_trait_fd <- read_excel("data/raw/CESTES/Plant_data/Frenette2012a_AJ.xls
   column_to_rownames(var = "Name")
 
 
-traitlist <- sort(c("C4", "Height", "LA", "LCC",  "LDMC",
-                    "LNC", "SLA", "Spinescence"))
+traitlist <- sort(c("Photo_path", "Height", "LA", "Leaf_C",  "LDMC",
+                    "Leaf_N", "SLA", "Stem_emerg"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

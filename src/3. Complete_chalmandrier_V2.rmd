@@ -58,7 +58,8 @@ chalmandrier_veg_cleantemp <- read_csv("data/raw/Chalmandrier et al. 2022/data/c
 chalmandrier_trait <- read_csv("data/raw/Chalmandrier et al. 2022/data/kettleholedata.23sp.csv") %>%
   filter(QuadID %in% plot_code_vector) %>%
   select(QuadID, poros, height, sla, species) %>%
-  rename(Plot_code = QuadID, `Six-letter code` = species) %>%
+  rename(Plot_code = QuadID, `Six-letter code` = species,
+         Root_poros = poros, Height = height, SLA = sla) %>%
   left_join(chalmandrier_species_list) %>%
   rename(Name = Species) %>%
   select(-c(`Six-letter code`)) %>%
@@ -67,13 +68,13 @@ chalmandrier_trait <- read_csv("data/raw/Chalmandrier et al. 2022/data/kettlehol
   ungroup() %>%
   full_join(chalmandrier_veg_cleantemp) %>%
   group_by(Name) %>%
-  mutate(across(.cols = c(poros, height, sla),  
+  mutate(across(.cols = c(Root_poros, Height, SLA),  
             ~replace_na(., 
                         mean(., na.rm = TRUE)))) %>% # The NA's are filled up by the species mean
   ungroup() %>%
   arrange(Name) %>%
   drop_na(cover) %>%
-  drop_na(poros) %>% # Some cases have no abundance data and no trait data, by dropping NA's 
+  drop_na(Root_poros) %>% # Some cases have no abundance data and no trait data, by dropping NA's 
   # of one of the trait values, these cases (n = 134) are removed as well. 
   select(-c(cover)) %>%
   select(order(colnames(.))) %>%
@@ -82,11 +83,11 @@ chalmandrier_trait <- read_csv("data/raw/Chalmandrier et al. 2022/data/kettlehol
 chalmandrier_trait_fd <- chalmandrier_trait 
 
 # Standardizing is done after the fd dataframe is made, otherwise the values are standardized twice
-chalmandrier_trait <- chalmandrier_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#chalmandrier_trait <- chalmandrier_trait %>%
+ # mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
 
 
-traitlist <- sort(c("height", "poros", "sla"))
+traitlist <- sort(c("Height", "Root_poros", "SLA"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

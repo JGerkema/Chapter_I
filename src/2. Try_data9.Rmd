@@ -48,6 +48,11 @@ TRYdata1 <- rtry_import(path_to_data)
 
 #tmp_unfiltered <- rtry_explore(tmp_unfiltered, DataID, DataName, OriglName, OrigValueStr, OrigUnitStr, StdValue, Comment, sortBy = OrigValueStr)
 
+TRYdata2 <- TRYdata1 %>%
+  filter(TraitID %notin% c(3107, 18))
+
+length(unique(TRYdata2$TraitName)) # n = 94230
+
 
 try_ls <- rtry_exclude(TRYdata1, (DataID %in% 413) & 
                          (OrigValueStr %in% c("13 weeks after sowing, 8 weeks after start of treatments",
@@ -198,12 +203,16 @@ try_clean2 <- try_clean %>%
 
 
 
-load("~/0. PhD/0. Chapter_I/data/processed/try_clean23_1.RData")
+load("~/0. PhD/0. Chapter_I/data/processed/try_clean29_1.RData")
+ref <- as.data.frame(unique(try_clean2$Reference))
 
+write_xlsx(ref, path = "docs/try_refs.xlsx")
 
 length(unique(try_clean2$AccSpeciesName))
 
-# try_clean2 contains 69191 unique, "accepted" species names
+# try_clean2 contains 69191 unique, "accepted" species names, 1592 of those
+# are nonsensical names. 
+69191 - 1592 +121
 
 # try_wf_clean2 contains the species names in the TRY database that have a direct
 # match with the WFO backbone. n = 64617.
@@ -219,7 +228,6 @@ try_names_save_1 <- try_wf_clean_first %>%
   mutate(new_try_name = old_try_name) %>%
   distinct()
 
-unique(try_wf_clean_first$taxonRank)
 
 # These species are not present in the WFO backbone. That could be because, 
 # 1). the species is not correctly spelled, or 2). because it is not an actual species name. 
@@ -229,6 +237,8 @@ not_included_in_wf <- try_clean2 %>%
   select(AccSpeciesName) %>%
   distinct() %>%
   separate(AccSpeciesName, into = c("genus", "sp"), extra = "merge", remove = F) 
+
+length(unique(not_included_in_wf$AccSpeciesName)) #4574
 
 removed_because_nonsensical_final <- not_included_in_wf %>%
   filter(sp %in% c("sp", "sp.", "abandoned area", "african shrubs", "alba preta",
@@ -258,14 +268,16 @@ removed_because_nonsensical_final <- not_included_in_wf %>%
                                   )) %>% # mata mata is a turtle species
   select(AccSpeciesName) %>%
   bind_rows(removed_because_nonsensical) %>%
-  arrange(AccSpeciesName) #1592
+  arrange(AccSpeciesName) 
+
+length(unique(removed_because_nonsensical_final$AccSpeciesName)) #1592
 
 not_included_in_wf <- not_included_in_wf %>%
   filter(AccSpeciesName %notin% c(removed_because_nonsensical_final$AccSpeciesName))
 
 length(unique(not_included_in_wf$AccSpeciesName)) #3103
 
-write_xlsx(removed_because_nonsensical_final, path = "removed_because_nonsensical_final291.xlsx")
+#write_xlsx(removed_because_nonsensical_final, path = "removed_because_nonsensical_final291.xlsx")
 
 
 ################################################## 
@@ -279,6 +291,7 @@ second_check_match <- not_included_in_wf %>%
   mutate(scientificName = paste0(genus, " ", sp)) %>%
   select(-c("sp", "extra", "genus"))
 
+length(unique(second_check_match$AccSpeciesName)) #n = 896
 length(unique(second_check_match$scientificName)) #n = 866
 
 try_wf_clean_second <- classification %>%
@@ -377,6 +390,7 @@ matched_with_wf_save <- matched_with_wf %>%
   filter(n() == 1) %>% # Some names have multiple matches, they are removed
   ungroup()
 
+length(unique(matched_with_wf_save$spec.name.ORIG)) #897
 #write_xlsx(matched_with_wf_save, path = "matched_with_wf_save2.xlsx")
 
 matched_with_wf_save_filt <- matched_with_wf_save %>%
@@ -456,7 +470,7 @@ accepted_species_single <- try_wf_clean_complete %>% #was eerst try_wf_clean2
   filter(taxonomicStatus != "Invalid")  %>% # no occurences
   distinct() %>%
   group_by(wfo_match) %>%
-  filter(n()==1) %>%
+  filter(n()==1) %>% #1588 new matches
   bind_rows(accepted_species_single_first)
 
 length(unique(accepted_species_single$wfo_match)) #59877
@@ -474,6 +488,7 @@ accepted_species_multiple <- try_wf_clean_complete %>% # was eerst try_wf_clean2
   distinct(wfo_match, .keep_all = TRUE)
 
 length(unique(accepted_species_multiple$wfo_match)) # n = 899
+899+1588
 
 accepted_species <- bind_rows(accepted_species_multiple, accepted_species_single) 
 
@@ -492,7 +507,8 @@ synonyms <- try_wf_clean_complete %>% # was eerst try_wf_clean2
   # assume that if an author writes down that name in the TRY database, 
   # it means the original, accepted species name and not a synonym of another species. 
   select(c(scientificName, acceptedNameUsageID, nomenclaturalStatus, 
-           taxonomicStatus, genus, family)) 
+           taxonomicStatus, genus, family)) %>%
+  distinct()
 
 length(unique(synonyms$scientificName)) # n = 4694
 
@@ -546,13 +562,24 @@ length(unique(single_synonyms_3$scientificName)) # n = 19
 multiple_synonyms_final <- multiple_synonyms %>%
   filter(scientificName %notin% c(single_synonyms_2$scientificName)) %>%
   filter(scientificName %notin% c(single_synonyms_3$scientificName)) %>%
+  distinct() %>%
   group_by(scientificName, genus, family) %>%
+  
   filter(n() > 1) #67 synoniemen
 
 length(unique(multiple_synonyms_final$scientificName)) # n = 67
 
+check_names <- classification %>%
+  mutate(scientificName = str_replace_all(scientificName, "  ", " ")) %>%
+  filter(taxonID %in% c(multiple_synonyms_final$acceptedNameUsageID)) %>%
+  select(scientificName, taxonID) %>%
+  distinct() %>%
+  rename(acceptedNameUsageID = taxonID, new_name = scientificName) %>%
+  full_join(multiple_synonyms_final)
+
 # For some synonyms that still have multiple accepted species names, none of these
-# accepted names are included in the TRY database. It is therefore save to keep those
+# accepted names are included in the TRY database. Note, these accepted names differ in 
+# more than their author name. It is therefore save to keep those
 # synonym names in the try database. 
 
 multiple_synonyms_keep <- classification %>%
@@ -571,10 +598,14 @@ multiple_synonyms_keep <- classification %>%
   separate(new_try_name, into = c("genus"), sep = " ", extra = "drop", remove = F) %>%
   distinct()
 
+length(multiple_synonyms_keep$new_try_name)
 
 all_synonyms <- bind_rows(single_synonyms, single_synonyms_2, single_synonyms_3) %>%
   mutate(include = "yes") %>%
   select(-c(genus, family))
+
+how_many <- bind_rows(single_synonyms_2, single_synonyms_3)
+length(unique(how_many$scientificName)) # n = 127
 
 length(unique(all_synonyms$scientificName)) # n = 4622
 
@@ -881,13 +912,17 @@ traits_std <- trait_org %>%
   summarise(sd = sd(Value_org))
 
 check_na <- try_traits_tax_final %>%
-  select(c(wfo_match, ObservationID, genus, family, order, TraitName, StdValue)) %>%
+  select(c( ObservationID,  TraitName, StdValue)) %>%
   pivot_wider(values_from = StdValue, names_from = TraitName)
 
 na_n <- (colSums(is.na(check_na))) %>%
   data.frame() %>%
   rename(na_n = ".") %>%
-  mutate(perc_na = na_n/nrow(check_na))
+  mutate(perc_na = na_n/nrow(check_na)) %>%
+  rownames_to_column(var = "Trait") %>%
+  filter(Trait %notin% c("ObservationID"))
+
+#write_xlsx(na_n, path = "traits_na_perc301.xlsx")
 
 trait_both2 <- inner_join(trait_perm, trait_org) %>%
   mutate(SQ_ER = (Value_perm - Value_org)^2) %>%

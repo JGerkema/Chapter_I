@@ -60,8 +60,8 @@ standen_trait_species_list <- read_excel("data/raw/Standen et al. 2021/Trait Dat
 
 standen_trait <- read_excel("data/raw/Standen et al. 2021/Trait Data_Scotty Creek_Standen2021.xlsx") %>%
   full_join(standen_trait_species_list) %>%
-  rename(Plot_code = Plot, SLA = SLA_mm2_mg, N_mass = N_mass_mg_g, 
-         photosynthetic_rate = A_mass_umol_g_s, respiration_rate = R_mass_umol_g_s) %>%
+  rename(Plot_code = Plot, SLA = SLA_mm2_mg, Leaf_N = N_mass_mg_g, 
+         Photo_rate = A_mass_umol_g_s, Leaf_resp = R_mass_umol_g_s) %>%
   group_by(Plot_code, Name) %>%
   summarise(across(where(is.numeric), ~mean(., na.rm = TRUE))) %>%
   ungroup() %>%
@@ -85,10 +85,10 @@ standen_veg_fd <- standen_veg %>%
 
 standen_species_list <- colnames(standen_veg_fd)
 
-standen_trait <- standen_trait %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#standen_trait <- standen_trait %>%
+ # mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
 
-traitlist <- sort(c( "N_mass", "photosynthetic_rate", "respiration_rate", "SLA"))
+traitlist <- sort(c( "Leaf_N", "Photo_rate", "Leaf_resp", "SLA"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

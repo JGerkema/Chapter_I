@@ -42,21 +42,23 @@ rolhauser_veg <- read_excel("data/raw/Rolhauser et al. 2021/Copy of Rolhauser__W
   select(order(colnames(.)))
 
 rolhauser_trait <- read_excel("data/raw/Rolhauser et al. 2021/Copy of Rolhauser__Waller___Tucker_J_Ecol_-_data.xlsx") %>%
-  select(c(sp, SLA, VH, LCC, LS, CN, LT, LNC, LDMC)) %>%
+  select(c(sp, SLA, VH, LCC, LS, LT, LNC, LDMC)) %>%
   distinct() %>%
   full_join(species_codes) %>%
   select(-c(sp)) %>%
-  rename(Height = VH) %>%
+  rename(Height = VH, Leaf_C = LCC, Leaf_N = LNC,
+         LA = LS, Leaf_thickness = LT) %>%
+  select(-Leaf_N, LA, Leaf_thickness, LDMC) %>%
   arrange(Name) %>%
   select(order(colnames(.))) %>%
-  relocate(Name)
+  relocate(Name) #%>%
+  #mutate(across(where(is.numeric), ~ c(scale(., center = F))))
 
 rolhauser_trait_fd <- rolhauser_trait %>%
-  column_to_rownames(var = "Name") %>%
-  mutate(across(where(is.numeric), ~ c(scale(., center = T)))) # Center is true, this results in a mean of 0. This way of standardizing would not work for CATS, since all values need to be higher than 0, but for FD, this is preferred. 
+  column_to_rownames(var = "Name")  # Center is true, this results in a mean of 0. This way of standardizing would not work for CATS, since all values need to be higher than 0, but for FD, this is preferred. 
   
-
-traitlist <- sort(c( "CN", "Height", "LCC", "LDMC", "LNC", "LS", "LT", "SLA"))
+# "LDMC", "Leaf_N", "LA", "Leaf_thickness",
+traitlist <- sort(c( "Height", "Leaf_C",   "SLA"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

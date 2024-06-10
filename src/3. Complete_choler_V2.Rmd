@@ -34,6 +34,9 @@ choler_species_list <- read_excel("data/raw/CESTES/Plant_data/Choler2005_AJ.xlsx
 choler_veg <- read_excel("data/raw/CESTES/Plant_data/Choler2005_AJ.xlsx") %>%
   column_to_rownames(var = "Sites") 
 
+choler_envir <- read_excel("data/raw/CESTES/Plant_data/Choler2005_AJ.xlsx", 
+    sheet = "envir")
+
 colnames(choler_veg) <- choler_species_list$Taxon
 
 choler_veg <- choler_veg %>%
@@ -45,10 +48,14 @@ choler_veg <- choler_veg %>%
 choler_trait <- read_excel("data/raw/CESTES/Plant_data/Choler2005_AJ.xlsx", 
   sheet = "traits")  %>%
   full_join(choler_species_list) %>%
-  rename(LA = Area, SM = Seed) %>%
+  rename(LA = Area, SM = Seed,
+         Leaf_angle = Angle, 
+         Lateral_spread = Spread,
+         Leaf_N = N_mass,
+         Leaf_thickness = Thick) %>%
   select(-c(Sp, TaxAbbrev, genus, extra, sp)) %>%
   rename(Name = Taxon) %>%
-  mutate(Angle = Angle + 0.0001) %>% # To avoid values of 0
+  mutate(Leaf_angle = Leaf_angle + 0.0001) %>% # To avoid values of 0
   select(order(colnames(.))) %>%
   relocate(Name) %>%
   arrange(Name)
@@ -56,11 +63,12 @@ choler_trait <- read_excel("data/raw/CESTES/Plant_data/Choler2005_AJ.xlsx",
 choler_trait_fd <- choler_trait %>%
   column_to_rownames(var = "Name") 
 
-choler_trait <- choler_trait %>%
-     mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
+#choler_trait <- choler_trait %>%
+  #   mutate(across(where(is.numeric), ~ c(scale(., center = F)))) 
 
 
-traitlist <- sort(c("Angle", "Height", "LA", "N_mass", "SLA", "SM", "Spread", "Thick"))
+traitlist <- sort(c("Leaf_angle", "Height", "LA", "Leaf_N", "SLA", "SM", 
+                    "Lateral_spread", "Leaf_thickness"))
 cwm_names <- paste0(traitlist, "_cwm")
 cwv_names <- paste0(traitlist, "_cwv")
 

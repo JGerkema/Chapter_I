@@ -26,7 +26,6 @@ calculate_abundance <- function(input_veg_data, input_trait_data, cutoff_value) 
   #' returned as 'matrix4traits_prop'.
   
   
-
   veg_data <- list()
   
   veg_data$matrix <- input_veg_data
@@ -46,7 +45,11 @@ calculate_abundance <- function(input_veg_data, input_trait_data, cutoff_value) 
   # remove also species that don't occur in the dataset when trimmed to x% coverage
   veg_data$matrix_prop_match <- veg_data$matrix_prop_match[, which(colSums(veg_data$matrix_prop_match) > 0)]
   
-  # absolute abundances for those sites and species included in the trait analysis as above
+  if(ncol(veg_data$matrix_prop_match) == 0){
+  warning("No plots above the cutoff value")
+  return(NULL)  # Break off the function execution
+}
+  
   veg_data$matrix4traits <- veg_data$matrix[rownames(veg_data$matrix) %in% 
                             rownames(veg_data$matrix_prop_match), colnames(veg_data$matrix) %in% 
                             colnames(veg_data$matrix_prop_match)]
@@ -164,6 +167,10 @@ cats_preparation <- function(input_veg, input_trait, trait_information, cutoff_v
     
     relative_abundances <- calculate_abundance(input_veg, input_trait, cutoff_value)
     
+    if(is.null(relative_abundances) == TRUE){
+      warning("Relative abundances is empty")
+      return(NULL)
+    }
     # Filter the trait species so that they match up with the species actually occurring in the dataset
     trait_data <- input_trait %>%
       subset(Name %in% colnames(relative_abundances$matrix_prop_match)) %>%
@@ -193,6 +200,11 @@ cats_preparation <- function(input_veg, input_trait, trait_information, cutoff_v
     
     
     relative_abundances <- calculate_abundance(input_veg, input_trait, cutoff_value )
+    
+    if(is.null(relative_abundances) == TRUE){
+      warning("Relative abundances is empty")
+      return(NULL)
+    }
     
     # Select only the trait data for species that are present in the dataset after it has been filtered
     trait_data <- input_trait %>%
@@ -309,7 +321,7 @@ cats_preparation <- function(input_veg, input_trait, trait_information, cutoff_v
 
 calculate_mean_dist <- function(input_veg, input_processed){
 
-all_dist <- as.matrix(vegdist(input_veg, method="bray"))
+all_dist <- as.matrix(vegdist(input_processed[["relative_abundances"]][["matrix4traits"]], method="bray"))
 
 plot_code_vector <- rownames(input_processed[["relative_abundances"]][["matrix4traits_prop"]])
 
@@ -393,27 +405,27 @@ calculate_FD_plotlvl <- function(input_processed, input_veg, input_trait){
   
 }
 
-calculate_diversity_info <- function(veg_data, veg_data_fd, input_processed, trait_fd,  
+calculate_diversity_info <- function(veg_data, input_veg_fd, input_processed, trait_fd,  
                                      trait_detail, study_name){
   
   mean_dist <- calculate_mean_dist(veg_data, input_processed)
   
   if(trait_detail == "Study"){
     
-    FD <- dbFD(trait_fd, veg_data_fd, stand.x = TRUE)
+    FD <- dbFD(trait_fd, input_veg_fd, stand.x = TRUE)
     
-    FD_output<- data.frame(FEve_orig = FD$FEve,
-                          FDiv_orig = FD$FDiv,
-                          FRic_orig = FD$FRic,
-                          RaoQ_orig = FD$RaoQ,
-                          qual.FRic_orig = FD$qual.FRic) %>%
+    FD_output<- data.frame(FEve = FD$FEve,
+                          FDiv = FD$FDiv,
+                          FRic = FD$FRic,
+                          RaoQ = FD$RaoQ,
+                          qual.FRic = FD$qual.FRic) %>%
       rownames_to_column(var = "Plot_code")
     
     
 
   } else {
     
-    FD_output <- calculate_FD_plotlvl(input_processed, veg_data_fd, trait_fd)
+    FD_output <- calculate_FD_plotlvl(input_processed, input_veg_fd, trait_fd)
 
   }
   
@@ -514,7 +526,7 @@ cats_calculations <- function(prep_output, trait_information, trait_detail){
       
       # calculating model using the community-weighted trait plus a uniform prior...
       fit1 <- maxent2(constr = constraints_temp, states = states, lambda = TRUE)
-      temp1 <- maxent.test2(model = fit1, obs = relative_cover_temp, nperm = 99, quick = FALSE, plot = FALSE)
+      temp1 <- maxent.test2(model = fit1, obs = relative_cover_temp, nperm = 200, quick = FALSE, plot = FALSE)
       
       # Extract the lambda values
       lambda_fit1 <- list(fit1$lambda) %>%
@@ -540,7 +552,7 @@ cats_calculations <- function(prep_output, trait_information, trait_detail){
       
       # calculating model using the CWM plus metacommunity prior
       fit2 <- maxent2(constr = constraints_temp, states = states, prior = meta_prior, lambda = TRUE)
-      temp2 <- maxent.test2(model = fit2, obs = relative_cover_temp, nperm = 99, quick = FALSE, plot = FALSE)
+      temp2 <- maxent.test2(model = fit2, obs = relative_cover_temp, nperm = 200, quick = FALSE, plot = FALSE)
       
       # Extract the lambda values
       lambda_fit2 <- list(fit2$lambda) %>%
@@ -744,7 +756,7 @@ unregister_dopar <- function() {
 }
 
 
-cats_visualisation <- function(cats_output){
+cats_visualisation <- function(cats_output, trait_source){
   
   cats_output_processed <- cats_output %>%
     mutate(
@@ -776,7 +788,8 @@ cats_visualisation <- function(cats_output){
     ))
   
   cats_output_combined <- list(diversity_info, cats_output_processed) %>%
-    reduce(inner_join) 
+    reduce(inner_join) %>%
+    mutate(traits = trait_source)
   
   
   return(cats_output_combined)

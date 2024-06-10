@@ -5,7 +5,10 @@ list_of_packages <- c("tidyverse", "FD", "janitor", "progress", "readxl",
                       "vegan", "foreach", "doSNOW", "docstring", "renv", "ggcorrplot",
                       "reshape2", "conflicted", 
                       "remotes", "roxygen2", "devtools", "geosphere",
-                      "scales", "ecodist", "WorldFlora", "rtry")
+                      "scales", "ecodist", "WorldFlora", "rtry", "MuMIn",
+                      "AICcmodavg", "ggpubr", "car", "boot", "ggh4x" )
+
+# "rstatix" gives problems with the foreach loop
 
 new_packages <- list_of_packages[!(list_of_packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) install.packages(new_packages)
@@ -34,6 +37,13 @@ library(ggcorrplot) # Correlation plot
 library(reshape2) # Needed for ggcorrplot
 library(conflicted) # Function conflict_prefer
 library(remotes)
+library(MuMIn) # Calculate marginal and conditional R-squared for a mixed model
+library(AICcmodavg) # Use the predict function for a mixed model
+library(rstatix) # Needed for the t-test
+library(ggpubr)  # Also needed for t-test and visualisation?
+library(car) # Also needed for t-test and visualisation?
+library(boot) # Bootstrapping shite
+library(ggh4x)
 #library(abind) # Script gave error otherwise
 #library(prettyunits) # script gave error otherwise
 #library(extrafont) # Script gave error otherwise
